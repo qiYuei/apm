@@ -1,0 +1,15 @@
+{
+  "singleQuote": true,
+  "trailingComma": "all",
+  "proseWrap": "never",
+  "overrides": [
+    {
+      "files": ["*.json", ".prettierrc"],
+      "options": { "parser": "json" }
+    },
+    {
+      "files": ["*.{yaml,yml}"],
+      "options": { "singleQuote": false }
+    }
+  ]
+}

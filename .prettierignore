@@ -1,0 +1,13 @@
+/test/fixtures
+**/*.gif
+/dist
+/docs
+/es
+/lib
+/coverage
+.cache
+examples
+
+.changeset/*
+pnpm-lock.yaml
+packages/sandbox/src/core/sandbox/globals.ts
