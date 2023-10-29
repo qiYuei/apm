@@ -1,3 +1,3 @@
-export function add(x: number, y: number) {
-  return x + y;
-}
+export type { APMPlugin } from './plugin/pluginManger';
+
+export { createClient } from './client/client';
