@@ -4,12 +4,12 @@ import { createSender } from '../sender/sender';
 type PluginType = Array<(...args: unknown[]) => APMPlugin>;
 
 export interface APMConfig {
-  // 是否开启
+  /**是否开启*/
   enable?: boolean;
-  // 插件列表
+  /**插件列表*/
   plugins?: PluginType;
-  // 发送器
-  sender?: unknown;
+  /** 开启debug信息*/
+  debug?: boolean;
 }
 
 export async function createClient(config: APMConfig) {

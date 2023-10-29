@@ -9,6 +9,8 @@
   "type": "module",
   "scripts": {
     "prepare": "husky install && dumi setup",
+    "build": "pnpm  -r run build",
+    "dev": "pnpm --filter playground run dev",
     "lint": "eslint packages/",
     "prettier": "prettier --write .",
     "docs:dev": "dumi dev",
@@ -37,7 +39,9 @@
   },
   "lint-staged": {
     "**/*.{js,ts,json,css,md}": ["prettier --write --ignore-unknown"],
-    "packages/*/{src,types}/**/*.ts": ["eslint --cache --ext .js,.jsx,.ts,.tsx --format=pretty --fix"],
+    "packages/*/{src,types}/**/*.ts": [
+      "eslint --cache --ext .js,.jsx,.ts,.tsx --format=pretty --fix"
+    ],
     "packages/**/*.d.ts": ["eslint --ext .ts"]
   }
 }

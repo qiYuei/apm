@@ -1,5 +1,6 @@
 import type { APMConfig } from '../client/client';
 import type { MaybePromise } from '../types';
+import { createDebugger } from '../utils/shared';
 
 interface APMPluginHooks {
   init?: (config: APMConfig) => MaybePromise<void>;
@@ -12,7 +13,7 @@ export interface APMPlugin extends APMPluginHooks {
 }
 
 interface PluginHookUtils {
-  getPlugins(hookName: keyof APMPluginHooks): APMPlugin[] | undefined;
+  getPlugins(hookName: keyof APMPluginHooks): APMPlugin[];
   getPluginsHooks<K extends keyof APMPluginHooks>(hookName: K): NonNullable<APMPluginHooks[K]>[];
 }
 
@@ -76,11 +77,21 @@ export class PluginManger {
       ? U
       : never
   ) {
-    const plugins = this.pluginUtils.getPluginsHooks(hook);
+    // const plugins = this.pluginUtils.getPluginsHooks(hook);
+    // for (const plugin of plugins) {
+    //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //   // @ts-ignore
+    //   await plugin(...opts);
+    // }
+    const debug = createDebugger(`apm:plugin`);
+    const plugins = this.pluginUtils.getPlugins(hook);
+
     for (const plugin of plugins) {
+      console.log('11111111');
+      debug(`calling ${plugin.name}`);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      await plugin(...opts);
+      await plugin[hook](...opts);
     }
   }
 }
