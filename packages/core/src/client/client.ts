@@ -1,5 +1,6 @@
 import { PluginManger, type APMPlugin } from '../plugin/pluginManger';
 import { createSender } from '../sender/sender';
+import { createTracker, type ApmTracker } from '../tracker/tracker';
 
 type PluginType = Array<(...args: unknown[]) => APMPlugin>;
 
@@ -10,9 +11,35 @@ export interface APMConfig {
   plugins?: PluginType;
   /** 开启debug信息*/
   debug?: boolean;
+  /** */
+  ready?: (Client: Client) => void;
 }
 
-export async function createClient(config: APMConfig) {
+class Client {
+  config: APMConfig;
+  plugins: PluginManger;
+  tracker: ApmTracker;
+
+  constructor(config: APMConfig, pluginController: PluginManger) {
+    this.config = config;
+    this.plugins = pluginController;
+    this.tracker = createTracker();
+    this.init();
+  }
+
+  init() {
+    this.plugins
+      .callHook('init', this.config)
+      .then(() => {
+        if (typeof this.config.ready === 'function') {
+          this.config.ready(this);
+        }
+      })
+      .catch(() => {});
+  }
+}
+
+export function createClient(config: APMConfig) {
   const defaultPlugin = [] as PluginType;
 
   const plugins = [...defaultPlugin, ...(config?.plugins || [])].map((plugin) =>
@@ -21,8 +48,10 @@ export async function createClient(config: APMConfig) {
 
   const pluginManger = new PluginManger(plugins);
 
+  const client = new Client(config, pluginManger);
+
   const sender = createSender();
 
-  await pluginManger.callHook('init', config);
   console.log(sender, 'sender123');
+  return client;
 }

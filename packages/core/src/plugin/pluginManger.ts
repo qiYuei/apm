@@ -65,10 +65,12 @@ export function createPluginUtils(plugins: APMPlugin[]): PluginHookUtils {
 export class PluginManger {
   plugins: APMPlugin[];
   pluginUtils: PluginHookUtils;
+  debug: (...args: unknown[]) => unknown;
   constructor(plugins: APMPlugin[]) {
     this.plugins = plugins;
 
     this.pluginUtils = createPluginUtils(this.plugins);
+    this.debug = createDebugger(`apm:plugin`);
   }
 
   async callHook<T extends keyof APMPluginHooks>(
@@ -77,18 +79,10 @@ export class PluginManger {
       ? U
       : never
   ) {
-    // const plugins = this.pluginUtils.getPluginsHooks(hook);
-    // for (const plugin of plugins) {
-    //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //   // @ts-ignore
-    //   await plugin(...opts);
-    // }
-    const debug = createDebugger(`apm:plugin`);
     const plugins = this.pluginUtils.getPlugins(hook);
 
     for (const plugin of plugins) {
-      console.log('11111111');
-      debug(`calling ${plugin.name}`);
+      this.debug(`calling ${plugin.name}`);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       await plugin[hook](...opts);
