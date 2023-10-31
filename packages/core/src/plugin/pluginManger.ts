@@ -1,12 +1,16 @@
-import type { APMConfig } from '../client/client';
+import type { APMConfig, ApmClient } from '../client/client';
 import type { MaybePromise } from '../types';
-import { createDebugger } from '../utils/shared';
+import { createDebugger } from '../utils/debug';
 
-interface APMPluginHooks {
-  init?: (config: APMConfig) => MaybePromise<void>;
-  beforeRequest?: (request: RequestInfo) => MaybePromise<void>;
-  afterRequest?: (request: RequestInfo) => MaybePromise<void>;
+interface ApmParallelHook {
+  init?: (config: APMConfig, client: ApmClient) => MaybePromise<void>;
 }
+
+interface ApmBailHook {
+  beforeSend?: (opts: unknown) => MaybePromise<void | boolean>;
+}
+
+type APMPluginHooks = ApmParallelHook & ApmBailHook;
 
 export interface APMPlugin extends APMPluginHooks {
   name: string;
@@ -73,19 +77,35 @@ export class PluginManger {
     this.debug = createDebugger(`apm:plugin`);
   }
 
-  async callHook<T extends keyof APMPluginHooks>(
+  async callParallelHook<T extends keyof ApmParallelHook>(
     hook: T,
-    ...opts: NonNullable<APMPluginHooks[T]> extends (...arg: infer U) => MaybePromise<void>
+    ...opts: NonNullable<ApmParallelHook[T]> extends (...arg: infer U) => MaybePromise<unknown>
+      ? U
+      : never
+  ) {
+    const plugins = this.pluginUtils.getPlugins(hook).map((plugin) => {
+      this.debug(`Parallel calling ${plugin.name} plugin`);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      return plugin[hook](...opts);
+    });
+    await Promise.all(plugins);
+  }
+
+  async callBailHook<T extends keyof ApmBailHook>(
+    hook: T,
+    ...opts: NonNullable<ApmBailHook[T]> extends (...arg: infer U) => MaybePromise<unknown>
       ? U
       : never
   ) {
     const plugins = this.pluginUtils.getPlugins(hook);
 
     for (const plugin of plugins) {
-      this.debug(`calling ${plugin.name}`);
+      this.debug(`Bail calling ${plugin.name} plugin`);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      await plugin[hook](...opts);
+      const result = await plugin[hook](...opts);
+      if (result === false) return false;
     }
   }
 }

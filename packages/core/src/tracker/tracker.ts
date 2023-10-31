@@ -1,4 +1,5 @@
-import { createDebugger } from '../utils/shared';
+import type { ApmClient } from '../client';
+import { createDebugger } from '../utils/debug';
 
 interface ApmErrorTracker {
   subType: 'resource' | 'js' | 'Promise';
@@ -20,11 +21,23 @@ export type ApmTrackerOptions<T extends keyof ApmTrackerType> = {
   type: T;
 } & ApmTrackerType[T];
 
-export type ApmTracker = <T extends keyof ApmTrackerType>(data: ApmTrackerOptions<T>) => void;
+export type ApmTracker = <T extends keyof ApmTrackerType>(
+  data: ApmTrackerOptions<T>,
+) => Promise<void>;
 
-export function createTracker(): ApmTracker {
+export function createTracker(client: ApmClient): ApmTracker {
   const debug = createDebugger('apm:tracker');
-  return function (data) {
+  return async function (data, immediate = false) {
     debug(`tracker data ->`, data);
+
+    const result = await client.plugins.callBailHook('beforeSend', data);
+
+    if (result !== false) return; // skip
+
+    if (immediate) {
+      // 立即上报
+    } else {
+      // 延迟上报
+    }
   };
 }

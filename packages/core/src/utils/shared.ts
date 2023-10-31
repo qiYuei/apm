@@ -1,10 +1,16 @@
-import debug from 'debug';
-export type ApmDebugScope = `apm:${string}`;
+export function getPageUrl() {
+  return window.location.href;
+}
 
-export function createDebugger(namespace: ApmDebugScope): debug.Debugger['log'] {
-  const log = debug(namespace);
+export function isSupportPerformanceObserver() {
+  return !!window.PerformanceObserver;
+}
+export function isSupportSendBeacon() {
+  const isRealNavigator =
+    Object.prototype.toString.call(window && window.navigator) === '[object Navigator]';
+  return isRealNavigator && typeof window.navigator.sendBeacon === 'function';
+}
 
-  return (msg: string, ...args: unknown[]) => {
-    log(msg, ...args);
-  };
+export function isSupportFetch() {
+  return /^function fetch\(\)\s+\{\s+\[native code\]\s+\}$/.test(window.fetch.toString());
 }
