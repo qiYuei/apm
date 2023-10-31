@@ -1,5 +1,5 @@
 {
-  "name": "@apm/core",
+  "name": "@apm/browser",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/cjs/index.js",
@@ -19,7 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@apm/shared": "workspace:^1.0.0",
-    "debug": "^4.3.4"
+    "@apm/core": "workspace:^1.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.10"

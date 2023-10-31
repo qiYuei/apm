@@ -38,9 +38,11 @@ importers:
 
   packages/core:
     specifiers:
+      '@apm/shared': workspace:^1.0.0
       '@types/debug': ^4.1.10
       debug: ^4.3.4
     dependencies:
+      '@apm/shared': link:../shared
       debug: 4.3.4
     devDependencies:
       '@types/debug': 4.1.10

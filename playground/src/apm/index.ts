@@ -1,8 +1,9 @@
-import { createClient, type ApmClient, getPageUrl } from '@apm/core'
+import { createClient, type ApmClient } from '@apm/core'
+import { getPageUrl } from '@apm/shared'
 
 const client = createClient({
   senderConfigure: {
-    mode: 'beacon',
+    mode: 'fetch',
     url: 'xxxxx'
   },
   plugins: [
@@ -11,6 +12,7 @@ const client = createClient({
         name: '@apm/plugin-test',
         init(config) {
           console.log('init', config)
+          throw new Error('copwe')
         }
       }
     },
@@ -22,14 +24,17 @@ const client = createClient({
 
       function unCatchPromiseError(e: PromiseRejectionEvent) {
         console.log('unCatch Promise error', e)
-        client.tracker({
-          type: 'error',
-          subType: 'Promise',
-          msg: e.reason,
-          stack: e.reason.stack,
-          startTime: e.timeStamp,
-          pageURL: getPageUrl()
-        })
+        client.tracker(
+          {
+            type: 'error',
+            subType: 'Promise',
+            msg: e.reason,
+            stack: e.reason.stack,
+            startTime: e.timeStamp,
+            pageURL: getPageUrl()
+          },
+          'Error'
+        )
       }
 
       return {

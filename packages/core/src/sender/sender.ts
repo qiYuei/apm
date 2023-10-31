@@ -1,5 +1,5 @@
+import { isSupportFetch, isSupportSendBeacon } from '@apm/shared';
 import type { APMConfig, ApmClient } from '../client/client';
-import { isSupportFetch, isSupportSendBeacon } from '../utils';
 
 interface ApmBaseSender {
   url: string;
@@ -43,7 +43,7 @@ function useBeacon() {
 }
 
 export function createSender(config: APMConfig, client: ApmClient) {
-  const { senderConfigure } = config;
+  const { senderConfigure = { mode: 'beacon' } } = config;
   let sender: unknown;
   switch (senderConfigure.mode) {
     case 'image':
@@ -67,14 +67,9 @@ export function createSender(config: APMConfig, client: ApmClient) {
       data,
     };
 
-    // 不应该在这里触发 beforeSend ,这里发送的数据有可能是聚合后(延迟发送的集合)的数据
-    // const result = await client.plugins.callBailHook('beforeSend', sendConfig);
-
-    // if (result !== false) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore todo
     sender(sendConfig);
-    // }
   };
 }
 
@@ -84,7 +79,13 @@ function imageSender(opts: ApmImageSender) {
   img.src = `${url}?reportData=${JSON.stringify(data)}`;
 }
 
-function xhrSender(opts: ApmXhrSender) {}
+function xhrSender(opts: ApmXhrSender) {
+  const { url, data } = opts;
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', url);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.send(JSON.stringify(data));
+}
 
 function fetchSender(opts: ApmFetchSender) {
   const fetch = window.fetch;
@@ -105,6 +106,7 @@ function beaconSender(opts: ApmBeaconSender) {
   const status = beacon(opts.url, JSON.stringify(opts.data));
   if (!status) {
     // 有可能是数据过大降级使用 fetch|xhr
+
     isSupportFetch()
       ? fetchSender({ url: opts.url, data: opts.data })
       : xhrSender({ url: opts.url, data: opts.data });

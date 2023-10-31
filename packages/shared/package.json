@@ -1,5 +1,5 @@
 {
-  "name": "@apm/core",
+  "name": "@apm/shared",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/cjs/index.js",
@@ -16,12 +16,5 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@apm/shared": "workspace:^1.0.0",
-    "debug": "^4.3.4"
-  },
-  "devDependencies": {
-    "@types/debug": "^4.1.10"
-  }
+  "license": "ISC"
 }

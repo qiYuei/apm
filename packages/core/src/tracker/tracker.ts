@@ -1,3 +1,4 @@
+import type { ApmSeverity, ApmReportType } from '@apm/shared';
 import type { ApmClient } from '../client';
 import { createDebugger } from '../utils/debug';
 
@@ -23,21 +24,31 @@ export type ApmTrackerOptions<T extends keyof ApmTrackerType> = {
 
 export type ApmTracker = <T extends keyof ApmTrackerType>(
   data: ApmTrackerOptions<T>,
+  transportType: ApmReportType,
+  opts?: {
+    immediate?: boolean;
+    level?: ApmSeverity;
+  },
 ) => Promise<void>;
 
 export function createTracker(client: ApmClient): ApmTracker {
   const debug = createDebugger('apm:tracker');
-  return async function (data, immediate = false) {
+  return async function (data, transportType, opts = {}) {
     debug(`tracker data ->`, data);
+
+    const options = Object.assign({ immediate: false, level: 'low' }, opts);
 
     const result = await client.plugins.callBailHook('beforeSend', data);
 
-    if (result !== false) return; // skip
+    if (result === false) return; // skip
 
-    if (immediate) {
-      // 立即上报
-    } else {
-      // 延迟上报
-    }
+    client.transport(
+      {
+        data,
+        type: transportType,
+        level: options.level,
+      },
+      opts.immediate,
+    );
   };
 }

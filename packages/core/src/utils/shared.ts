@@ -1,16 +1,11 @@
-export function getPageUrl() {
-  return window.location.href;
-}
+import { getTimestamp } from '@apm/shared';
+import type { BreadcrumbPushData } from '../client/breadcrumb';
 
-export function isSupportPerformanceObserver() {
-  return !!window.PerformanceObserver;
-}
-export function isSupportSendBeacon() {
-  const isRealNavigator =
-    Object.prototype.toString.call(window && window.navigator) === '[object Navigator]';
-  return isRealNavigator && typeof window.navigator.sendBeacon === 'function';
-}
-
-export function isSupportFetch() {
-  return /^function fetch\(\)\s+\{\s+\[native code\]\s+\}$/.test(window.fetch.toString());
+export function ApmError(data: unknown): BreadcrumbPushData {
+  return {
+    type: 'Apm',
+    level: 'critical',
+    data,
+    time: getTimestamp(),
+  };
 }

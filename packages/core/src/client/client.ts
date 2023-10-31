@@ -1,6 +1,8 @@
 import { PluginManger, type APMPlugin } from '../plugin/pluginManger';
 import { type ApmSenderType, createSender } from '../sender/sender';
 import { createTracker, type ApmTracker } from '../tracker/tracker';
+import { ApmError } from '../utils';
+import { Breadcrumb, type ApmBreadcrumbConfigure, type BreadcrumbPushData } from './breadcrumb';
 
 type PluginType = Array<(...args: unknown[]) => APMPlugin>;
 
@@ -15,14 +17,20 @@ export interface APMConfig {
   ready?: (Client: Client) => void;
   /** SenderConfigure */
   senderConfigure: {
-    mode: keyof ApmSenderType;
+    url: string;
+    mode?: keyof ApmSenderType;
+    xhrHeaders?: Record<string, string>;
+    interval?: number;
   } & Record<string, unknown>;
+
+  breadcrumbConfigure?: ApmBreadcrumbConfigure;
 }
 
 export interface ApmClient {
   config: APMConfig;
   tracker: ApmTracker;
   plugins: PluginManger;
+  transport(data: BreadcrumbPushData, immediate?: boolean): void;
 }
 
 export class Client implements ApmClient {
@@ -32,12 +40,15 @@ export class Client implements ApmClient {
 
   private initd: boolean = false;
   private sender: (data: unknown) => Promise<void>;
+  private breadcrumb: Breadcrumb;
+
+  private timer: NodeJS.Timeout | null = null;
   constructor(config: APMConfig, pluginController: PluginManger) {
     this.config = config;
     this.plugins = pluginController;
     this.tracker = createTracker(this);
     this.sender = createSender(config, this);
-
+    this.breadcrumb = new Breadcrumb(config.breadcrumbConfigure);
     this.init();
   }
 
@@ -51,12 +62,43 @@ export class Client implements ApmClient {
         }
         this.initd = true;
       })
-      .catch(() => {});
+      .catch((e) => {
+        // 需要提取出具体的堆栈，但是也有可能只是 string
+        this.transport(ApmError({ message: 'apm init failed', e }));
+      });
   }
   //  init 实现队列
+  transport(data: BreadcrumbPushData, immediate = false) {
+    if (immediate) {
+      this.transportIdle(data);
+      return;
+    }
 
-  flush() {
-    
+    this.breadcrumb.push(data);
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+
+    this.timer = setTimeout(
+      () => {
+        this.breadcrumb.debugger(`will sender`, this.breadcrumb.getStack());
+        this.transportIdle(this.breadcrumb.getStack(), () => this.breadcrumb.flush());
+      },
+      this.config.senderConfigure?.interval,
+    );
+  }
+
+  transportIdle(data: BreadcrumbPushData[] | BreadcrumbPushData, cb?: () => void) {
+    const transportData = Array.isArray(data) ? data : [data];
+    window.requestIdleCallback(() => {
+      this.sender(transportData)
+        .then(() => {
+          cb && cb();
+        })
+        .catch((e) => {
+          ApmError({ message: 'error' + e });
+        });
+    });
   }
 }
 
@@ -65,6 +107,8 @@ export function createClient(config: APMConfig) {
     debug: false,
     senderConfigure: {
       mode: 'beacon',
+      interval: 3000,
+      url: 'xxxx',
     },
   };
 
