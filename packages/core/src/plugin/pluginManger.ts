@@ -1,16 +1,20 @@
-import type { APMConfig, ApmClient } from '../client/client';
+import type { ApmClient } from '../client/client';
 import type { MaybePromise } from '../types';
 import { createDebugger } from '../utils/debug';
 
 interface ApmParallelHook {
-  init?: (config: APMConfig, client: ApmClient) => MaybePromise<void>;
+  init?: (client: ApmClient) => MaybePromise<void>;
 }
 
 interface ApmBailHook {
   beforeSend?: (opts: unknown) => MaybePromise<void | boolean>;
 }
 
-type APMPluginHooks = ApmParallelHook & ApmBailHook;
+interface ApmSerialHook {
+  configure?: <T>(config: T) => T | void;
+}
+
+type APMPluginHooks = ApmParallelHook & ApmBailHook & ApmSerialHook;
 
 export interface APMPlugin extends APMPluginHooks {
   name: string;
@@ -67,7 +71,7 @@ export function createPluginUtils(plugins: APMPlugin[]): PluginHookUtils {
 }
 
 export class PluginManger {
-  plugins: APMPlugin[];
+  private plugins: APMPlugin[];
   pluginUtils: PluginHookUtils;
   debug: (...args: unknown[]) => unknown;
   constructor(plugins: APMPlugin[]) {

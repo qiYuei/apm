@@ -4,7 +4,7 @@ import { WINDOW } from '../../shared';
 export function ApmErrorPlugin(): APMPlugin {
   return {
     name: 'apm-error-plugin',
-    init(config, client) {
+    init(client) {
       const globalObject = WINDOW as unknown as { [key: string]: unknown };
       rewrite(globalObject, 'onerror', function (original): OnErrorEventHandler {
         return function (...opts) {

@@ -4,17 +4,13 @@ import { createTracker, type ApmTracker } from '../tracker/tracker';
 import { ApmError } from '../utils';
 import { Breadcrumb, type ApmBreadcrumbConfigure, type BreadcrumbPushData } from './breadcrumb';
 
-type PluginType = Array<(...args: unknown[]) => APMPlugin>;
-
 export interface APMConfig {
   /**是否开启*/
   enable?: boolean;
   /**插件列表*/
-  plugins?: PluginType;
+  plugins?: APMPlugin[];
   /** 开启debug信息*/
   debug?: boolean;
-  /** */
-  ready?: (Client: Client) => void;
   /** SenderConfigure */
   senderConfigure: {
     url: string;
@@ -52,22 +48,20 @@ export class Client implements ApmClient {
     this.tracker = createTracker(this);
     this.sender = createSender(config, this);
     this.breadcrumb = new Breadcrumb(config.breadcrumbConfigure);
-    this.init();
   }
 
-  init() {
+  init(onComplete?: () => void, onFailed?: (e: unknown) => void) {
     if (this.initd) return;
     this.plugins
-      .callParallelHook('init', this.config, this)
+      .callParallelHook('init', this)
       .then(() => {
-        if (typeof this.config.ready === 'function') {
-          this.config.ready(this);
-        }
+        onComplete?.();
         this.initd = true;
       })
       .catch((e) => {
         // 需要提取出具体的堆栈，但是也有可能只是 string
-        this.transport(ApmError({ message: 'apm init failed', e }));
+        // this.transport(ApmError({ message: 'apm init failed', e }));
+        onFailed?.(e);
       });
   }
   //  init 实现队列
@@ -117,11 +111,9 @@ export function createClient(config: APMConfig) {
 
   const userConfig = Object.assign({}, defaultConfig, config);
 
-  const defaultPlugin = [] as PluginType;
+  const defaultPlugin = [] as APMPlugin[];
 
-  const plugins = [...defaultPlugin, ...(userConfig?.plugins || [])].map((plugin) =>
-    plugin.call(null, userConfig),
-  );
+  const plugins = [...defaultPlugin, ...(userConfig?.plugins || [])];
 
   const pluginManger = new PluginManger(plugins);
 
