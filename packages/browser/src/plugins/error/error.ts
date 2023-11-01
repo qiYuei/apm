@@ -3,6 +3,12 @@ import { WINDOW } from '../../shared';
 import { getPageUrl, getTimestamp } from '@apm/shared';
 import { unknownErrorEvtToString } from '../../shared/utils';
 
+const resourceMap = {
+  img: '图片',
+  js: 'JS脚本',
+  css: 'CSS文件',
+};
+
 export function ApmErrorPlugin(): APMPlugin {
   return {
     name: 'apm-error-plugin',
@@ -23,7 +29,6 @@ export function ApmErrorPlugin(): APMPlugin {
               stack: error ? error.stack : '',
               msg: unknownErrorEvtToString(ev),
               column: col,
-              line: line,
               pageURL: getPageUrl(),
             },
             'Error',
@@ -34,7 +39,61 @@ export function ApmErrorPlugin(): APMPlugin {
         };
       });
 
-      window.addEventListener('error', () => {}, true);
+      window.addEventListener(
+        'error',
+        (ev: ErrorEvent) => {
+          console.log(ev instanceof ErrorEvent, 'ddddddddddddd');
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const { error } = ev;
+          if (ev instanceof ErrorEvent) {
+            client.tracker(
+              {
+                type: 'error',
+                subType: 'js',
+                startTime: getTimestamp(),
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+                stack: error ? error.stack : '',
+                msg: unknownErrorEvtToString(ev.error as Event),
+                column: ev.colno,
+                pageURL: getPageUrl(),
+              },
+              'Error',
+            );
+          } else {
+            client.tracker(
+              {
+                type: 'resource',
+                pageURL: getPageUrl(),
+                startTime: getTimestamp(),
+                tagName: '',
+                msg: '',
+                url: '',
+              },
+              'Resource',
+            );
+          }
+        },
+        true,
+      );
+
+      // Promise Error
+      window.addEventListener(
+        'unhandledrejection',
+        (ev) => {
+          console.log(ev, 'Promise');
+          client.tracker(
+            {
+              type: 'error',
+              subType: 'Promise',
+              msg: unknownErrorEvtToString(ev.reason as string),
+              startTime: getTimestamp(),
+              pageURL: getPageUrl(),
+            },
+            'Error',
+          );
+        },
+        true,
+      );
     },
   };
 }

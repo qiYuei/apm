@@ -3,7 +3,7 @@ import type { ApmClient } from '../client';
 import { createDebugger } from '../utils/debug';
 
 interface ApmErrorTracker {
-  subType: 'resource' | 'js' | 'Promise';
+  subType: 'js' | 'Promise';
   type: 'error';
   startTime: number;
   pageURL: string;
@@ -13,8 +13,18 @@ interface ApmErrorTracker {
   stack?: string;
 }
 
+interface ApmResourceErrorTracker {
+  type: 'resource';
+  tagName: string;
+  pageURL: string;
+  startTime: number;
+  url: string;
+  msg: string;
+}
+
 export interface ApmTrackerType {
   error: ApmErrorTracker;
+  resource: ApmResourceErrorTracker;
   custom: Record<string, unknown>;
 }
 

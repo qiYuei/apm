@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
-import { onMounted, toHandlers } from 'vue'
+import { onMounted } from 'vue'
 
 // d = 1234
 
@@ -19,6 +19,32 @@ function toHandlers() {
 
   str.push(1234)
 }
+
+onMounted(() => {})
+
+function promiseError() {
+  return new Promise((resolve, reject) => {
+    reject('some message reject')
+  })
+}
+
+function promiseError2() {
+  return new Promise((resolve, reject) => {
+    reject(new Error('throw error'))
+  })
+}
+
+function rescourceError() {
+  setTimeout(() => {
+    const image = new Image()
+    image.src = './heel.jpg'
+    document.body.appendChild(image)
+
+    const script = document.createElement('script')
+    script.src = './test.js'
+    document.body.appendChild(script)
+  }, 3000)
+}
 </script>
 
 <template>
@@ -34,6 +60,9 @@ function toHandlers() {
       </nav>
 
       <button @click="toHandlers">惦记我</button>
+      <button @click="rescourceError">资源加载</button>
+      <button @click="promiseError">Promise</button>
+      <button @click="promiseError2">Promise2</button>
     </div>
   </header>
 
