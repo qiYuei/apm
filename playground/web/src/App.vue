@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
-import { onMounted } from 'vue'
+import { onMounted, toHandlers } from 'vue'
 
 // d = 1234
 
-onMounted(() => {
-  // Promise.reject('error')
-  setTimeout(() => {
-    d = 1234
-  }, 3000)
-})
+// onMounted(() => {
+//   // Promise.reject('error')
+//   setTimeout(() => {
+//     d = 1234
+//   }, 3000)
+// })
+
+function toHandlers() {
+  for (let i = 0; i < 999; i++) {}
+
+  let str = '321423'
+
+  str.push(1234)
+}
 </script>
 
 <template>
@@ -24,6 +32,8 @@ onMounted(() => {
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
       </nav>
+
+      <button @click="toHandlers">惦记我</button>
     </div>
   </header>
 

@@ -8,8 +8,8 @@ interface ApmErrorTracker {
   startTime: number;
   pageURL: string;
   msg: string;
-  line?: string;
-  column?: string;
+  line?: number;
+  column?: number;
   stack?: string;
 }
 
