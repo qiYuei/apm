@@ -6,7 +6,10 @@ import { onMounted } from 'vue'
 // d = 1234
 
 onMounted(() => {
-  Promise.reject('error')
+  // Promise.reject('error')
+  setTimeout(() => {
+    d = 1234
+  }, 3000)
 })
 </script>
 

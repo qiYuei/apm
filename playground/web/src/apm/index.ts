@@ -1,6 +1,6 @@
 import { createClient, type ApmClient } from '@apm/core'
 import { getPageUrl } from '@apm/shared'
-
+import { ApmErrorPlugin } from '@apm/browser'
 const client = createClient({
   senderConfigure: {
     mode: 'fetch',
@@ -12,7 +12,6 @@ const client = createClient({
         name: '@apm/plugin-test',
         init(config) {
           console.log('init', config)
-          throw new Error('copwe')
         }
       }
     },
@@ -52,6 +51,7 @@ const client = createClient({
           window.addEventListener('unhandledrejection', unCatchPromiseError, true)
         }
       }
-    }
+    },
+    ApmErrorPlugin
   ]
 })

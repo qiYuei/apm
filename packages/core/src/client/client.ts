@@ -19,8 +19,11 @@ export interface APMConfig {
   senderConfigure: {
     url: string;
     mode?: keyof ApmSenderType;
-    xhrHeaders?: Record<string, string>;
+    /** xhr|fetch 传递的header */
+    header?: Record<string, string>;
+    /** 默认防抖3秒 */
     interval?: number;
+    fetchOptions?: RequestInit;
   } & Record<string, unknown>;
 
   breadcrumbConfigure?: ApmBreadcrumbConfigure;
