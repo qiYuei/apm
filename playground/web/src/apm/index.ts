@@ -48,13 +48,13 @@ const client = createBrowserClient({
             console.log('ioooooooooooooooooooooooooooooooo')
             client = clientInstance
             // 捕获资源加载失败错误 js css img...
-            window.addEventListener('error', sourceError, true)
+            // window.addEventListener('error', sourceError, true)
 
-            window.onerror = function onerror(e) {
-              console.log('exec js error', e)
-            }
+            // window.onerror = function onerror(e) {
+            //   console.log('exec js error', e)
+            // }
 
-            window.addEventListener('unhandledrejection', unCatchPromiseError, true)
+            // window.addEventListener('unhandledrejection', unCatchPromiseError, true)
           }
         }
       })(),

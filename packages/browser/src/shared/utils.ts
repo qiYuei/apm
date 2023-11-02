@@ -6,9 +6,17 @@ export function mergeConfigure(userConfig: ApmBrowserConfigure): ApmBrowserConfi
   };
 }
 
-export function unknownErrorEvtToString(evt: string | Event) {
+export function unknownErrorEvtToString(evt: string | Error | ErrorEvent) {
   if (!evt) return '';
   if (typeof evt === 'string') return evt;
-
+  if (evt.message) return evt.message;
   return JSON.stringify(evt);
+}
+
+export function getEventTrigger(el: HTMLElement) {
+  return {
+    tag: el.tagName.toLowerCase(),
+    url: el.getAttribute('src') || el.getAttribute('href'),
+    html: el.outerHTML,
+  };
 }

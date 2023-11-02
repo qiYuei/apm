@@ -1,12 +1,13 @@
 import { rewrite, type APMPlugin } from '@apm/core';
 import { WINDOW } from '../../shared';
 import { getPageUrl, getTimestamp } from '@apm/shared';
-import { unknownErrorEvtToString } from '../../shared/utils';
+import { getEventTrigger, unknownErrorEvtToString } from '../../shared/utils';
+import { parseStackFrames } from '../../shared/resolveStack';
 
-const resourceMap = {
+const resourceMap: Record<string, string> = {
   img: '图片',
-  js: 'JS脚本',
-  css: 'CSS文件',
+  script: 'JS脚本',
+  link: '资源文件',
 };
 
 export function ApmErrorPlugin(): APMPlugin {
@@ -16,20 +17,19 @@ export function ApmErrorPlugin(): APMPlugin {
       const globalObject = WINDOW as unknown as { [key: string]: unknown };
       rewrite(globalObject, 'onerror', function (original): OnErrorEventHandler {
         return function (...opts) {
-          const [ev, source, line, col, error] = opts;
-
+          const [ev, , row, col, error] = opts;
           // 从错误信息中提取信息堆栈等等，在上传
-          console.log(ev, source, 'ev, source', line, col, error);
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           client.tracker(
             {
               type: 'error',
               subType: 'js',
               startTime: getTimestamp(),
-              stack: error ? error.stack : '',
-              msg: unknownErrorEvtToString(ev),
+              stack: parseStackFrames(error!),
+              msg: unknownErrorEvtToString(ev as ErrorEvent),
               column: col,
               pageURL: getPageUrl(),
+              line: row,
             },
             'Error',
           );
@@ -42,9 +42,8 @@ export function ApmErrorPlugin(): APMPlugin {
       window.addEventListener(
         'error',
         (ev: ErrorEvent) => {
-          console.log(ev instanceof ErrorEvent, 'ddddddddddddd');
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const { error } = ev;
+          const { error } = ev as { error: Error };
           if (ev instanceof ErrorEvent) {
             client.tracker(
               {
@@ -52,22 +51,25 @@ export function ApmErrorPlugin(): APMPlugin {
                 subType: 'js',
                 startTime: getTimestamp(),
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-                stack: error ? error.stack : '',
-                msg: unknownErrorEvtToString(ev.error as Event),
+                stack: parseStackFrames(error),
+                msg: unknownErrorEvtToString(error),
                 column: ev.colno,
+                line: ev.lineno,
                 pageURL: getPageUrl(),
               },
               'Error',
             );
           } else {
+            const { tag, url, html } = getEventTrigger((ev as Event).target as HTMLElement);
             client.tracker(
               {
                 type: 'resource',
                 pageURL: getPageUrl(),
                 startTime: getTimestamp(),
-                tagName: '',
-                msg: '',
-                url: '',
+                tagName: tag,
+                msg: `${resourceMap[tag]}: 加载失败`,
+                url: url!,
+                outHtml: html,
               },
               'Resource',
             );
@@ -86,6 +88,7 @@ export function ApmErrorPlugin(): APMPlugin {
               type: 'error',
               subType: 'Promise',
               msg: unknownErrorEvtToString(ev.reason as string),
+              stack: parseStackFrames(ev.reason as Error),
               startTime: getTimestamp(),
               pageURL: getPageUrl(),
             },

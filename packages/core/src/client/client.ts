@@ -81,7 +81,7 @@ export class Client implements ApmClient {
         this.breadcrumb.debugger(`will sender`, this.breadcrumb.getStack());
         this.transportIdle(this.breadcrumb.getStack(), () => this.breadcrumb.flush());
       },
-      this.config.senderConfigure?.interval,
+      this.config.senderConfigure?.interval || 5000,
     );
   }
 

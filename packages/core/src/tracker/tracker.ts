@@ -2,6 +2,13 @@ import type { ApmSeverity, ApmReportType } from '@apm/shared';
 import type { ApmClient } from '../client';
 import { createDebugger } from '../utils/debug';
 
+interface ApmErrorStack {
+  filename?: string;
+  functionName?: string;
+  lineno?: number;
+  colno?: number;
+}
+
 interface ApmErrorTracker {
   subType: 'js' | 'Promise';
   type: 'error';
@@ -10,7 +17,7 @@ interface ApmErrorTracker {
   msg: string;
   line?: number;
   column?: number;
-  stack?: string;
+  stack?: string | Array<ApmErrorStack>;
 }
 
 interface ApmResourceErrorTracker {
@@ -20,6 +27,7 @@ interface ApmResourceErrorTracker {
   startTime: number;
   url: string;
   msg: string;
+  outHtml?: string;
 }
 
 export interface ApmTrackerType {
