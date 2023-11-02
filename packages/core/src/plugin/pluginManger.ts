@@ -1,13 +1,14 @@
+import type { BreadcrumbPushData } from '../client/breadcrumb';
 import type { ApmClient } from '../client/client';
 import type { MaybePromise } from '../types';
 import { createDebugger } from '../utils/debug';
 
 interface ApmParallelHook {
-  init?: (client: ApmClient) => MaybePromise<void>;
+  setup?: (client: ApmClient) => MaybePromise<void>;
 }
 
 interface ApmBailHook {
-  beforeSend?: (opts: unknown) => MaybePromise<void | boolean>;
+  beforeSend?: (sendData: BreadcrumbPushData) => MaybePromise<void | boolean>;
 }
 
 interface ApmSerialHook {

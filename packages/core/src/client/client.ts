@@ -53,7 +53,7 @@ export class Client implements ApmClient {
   init(onComplete?: () => void, onFailed?: (e: unknown) => void) {
     if (this.initd) return;
     this.plugins
-      .callParallelHook('init', this)
+      .callParallelHook('setup', this)
       .then(() => {
         onComplete?.();
         this.initd = true;

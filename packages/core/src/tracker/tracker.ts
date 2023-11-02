@@ -56,17 +56,16 @@ export function createTracker(client: ApmClient): ApmTracker {
 
     const options = Object.assign({ immediate: false, level: 'low' }, opts);
 
-    const result = await client.plugins.callBailHook('beforeSend', data);
+    const transportData = {
+      data,
+      type: transportType,
+      level: options.level,
+    };
+
+    const result = await client.plugins.callBailHook('beforeSend', transportData);
 
     if (result === false) return; // skip
 
-    client.transport(
-      {
-        data,
-        type: transportType,
-        level: options.level,
-      },
-      opts.immediate,
-    );
+    client.transport(transportData, opts.immediate);
   };
 }

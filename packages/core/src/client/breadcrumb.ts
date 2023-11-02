@@ -13,6 +13,8 @@ export interface BreadcrumbPushData {
   data: unknown;
   time?: number;
   level: ApmSeverity;
+  deviceBlock?: unknown;
+  userBlock?: unknown;
 }
 
 export class Breadcrumb {

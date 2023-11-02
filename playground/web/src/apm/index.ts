@@ -1,6 +1,6 @@
 import { createClient, type ApmClient } from '@apm/core'
 import { getPageUrl } from '@apm/shared'
-import { ApmErrorPlugin, createBrowserClient } from '@apm/browser'
+import { ApmErrorPlugin, createBrowserClient, ApmDevicePlugin } from '@apm/browser'
 const client = createBrowserClient({
   monitor: {
     error: true
@@ -16,7 +16,7 @@ const client = createBrowserClient({
         return {
           name: '@apm/plugin-test',
           configure(config) {},
-          init(config) {
+          setup(config) {
             console.log('init', config)
           }
         }
@@ -44,7 +44,7 @@ const client = createBrowserClient({
 
         return {
           name: '@apm/plugin-test22222',
-          init(clientInstance) {
+          setup(clientInstance) {
             console.log('ioooooooooooooooooooooooooooooooo')
             client = clientInstance
             // 捕获资源加载失败错误 js css img...
@@ -58,7 +58,8 @@ const client = createBrowserClient({
           }
         }
       })(),
-      ApmErrorPlugin()
+      ApmErrorPlugin(),
+      ApmDevicePlugin()
     ]
   }
 })
