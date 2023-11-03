@@ -1,6 +1,7 @@
 import type { ApmClient } from '@apm/core';
 import { createClient, type APMConfig, type APMPlugin, ApmError } from '@apm/core';
 import { mergeConfigure } from '../shared/utils';
+import { type ApmSenderType, createSender } from '../sender/sender';
 
 export interface ApmBrowserMonitor {
   error?: boolean;
@@ -13,6 +14,16 @@ export interface ApmBrowserConfigure {
   apmConfig: APMConfig;
   plugins?: APMPlugin[];
   ready?: (client: ApmClient) => void;
+  /** SenderConfigure */
+  senderConfigure: {
+    url: string;
+    mode?: keyof ApmSenderType;
+    /** xhr|fetch 传递的header */
+    header?: Record<string, string>;
+    /** 默认防抖3秒 */
+    interval?: number;
+    fetchOptions?: RequestInit;
+  } & Record<string, unknown>;
 }
 
 export function createBrowserClient(userConfigure: ApmBrowserConfigure) {
@@ -31,7 +42,9 @@ export function createBrowserClient(userConfigure: ApmBrowserConfigure) {
     }
   }
 
-  const client = createClient(configure.apmConfig);
+  const client = createClient(configure.apmConfig, {
+    senderFactory: createSender(configure),
+  });
 
   client.init(
     () => {

@@ -1,16 +1,15 @@
-import { createClient, type ApmClient } from '@apm/core'
-import { getPageUrl } from '@apm/shared'
+import { type ApmClient } from '@apm/core'
 import { ApmErrorPlugin, createBrowserClient, ApmDevicePlugin, fp } from '@apm/browser'
 const client = createBrowserClient({
   monitor: {
     error: true
   },
-
+  senderConfigure: {
+    mode: 'fetch',
+    url: 'xxxxx'
+  },
   apmConfig: {
-    senderConfigure: {
-      mode: 'fetch',
-      url: 'xxxxx'
-    },
+    interval: 5000,
     plugins: [
       (() => {
         return {
@@ -23,24 +22,6 @@ const client = createBrowserClient({
       })(),
       (() => {
         let client: ApmClient
-        function sourceError(e: ErrorEvent) {
-          console.log('load source error', e)
-        }
-
-        function unCatchPromiseError(e: PromiseRejectionEvent) {
-          console.log('unCatch Promise error', e)
-          client.tracker(
-            {
-              type: 'error',
-              subType: 'Promise',
-              msg: e.reason,
-              stack: e.reason.stack,
-              startTime: e.timeStamp,
-              pageURL: getPageUrl()
-            },
-            'Error'
-          )
-        }
 
         return {
           name: '@apm/plugin-test22222',

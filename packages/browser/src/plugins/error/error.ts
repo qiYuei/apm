@@ -1,8 +1,9 @@
 import { rewrite, type APMPlugin } from '@apm/core';
 import { WINDOW } from '../../shared';
-import { getPageUrl, getTimestamp } from '@apm/shared';
+import { getPageUrl } from '../../shared/utils';
 import { getEventTrigger, unknownErrorEvtToString } from '../../shared/utils';
 import { parseStackFrames } from '../../shared/resolveStack';
+import { getTimestamp } from '@apm/shared';
 
 const resourceMap: Record<string, string> = {
   img: '图片',

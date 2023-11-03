@@ -1,5 +1,6 @@
-import { isSupportFetch, isSupportSendBeacon } from '@apm/shared';
-import type { APMConfig, ApmClient } from '../client/client';
+import type { ApmBrowserConfigure } from '../client/browser';
+import { isSupportFetch, isSupportSendBeacon } from '../shared/utils';
+import type { ApmClient } from '@apm/core';
 
 interface ApmBaseSender {
   url: string;
@@ -42,34 +43,37 @@ function useBeacon() {
   return isSupportFetch() ? fetchSender : xhrSender;
 }
 
-export function createSender(config: APMConfig, client: ApmClient) {
+export function createSender(config: ApmBrowserConfigure) {
   const { senderConfigure = { mode: 'beacon' } } = config;
-  let sender: unknown;
-  switch (senderConfigure.mode) {
-    case 'image':
-      sender = imageSender;
-      break;
-    case 'xhr':
-      sender = xhrSender;
-      break;
-    case 'fetch':
-      sender = fetchSender;
-      break;
-    case 'beacon':
-    default:
-      sender = useBeacon();
-      break;
-  }
 
-  return async (data: unknown) => {
-    const sendConfig = {
-      ...senderConfigure,
-      data,
+  return (client: ApmClient) => {
+    let sender: unknown;
+    switch (senderConfigure.mode) {
+      case 'image':
+        sender = imageSender;
+        break;
+      case 'xhr':
+        sender = xhrSender;
+        break;
+      case 'fetch':
+        sender = fetchSender;
+        break;
+      case 'beacon':
+      default:
+        sender = useBeacon();
+        break;
+    }
+
+    return async (data: unknown) => {
+      const sendConfig = {
+        ...senderConfigure,
+        data,
+      };
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore todo
+      sender(sendConfig);
     };
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore todo
-    sender(sendConfig);
   };
 }
 

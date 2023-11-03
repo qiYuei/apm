@@ -1,5 +1,4 @@
 import { PluginManger, type APMPlugin } from '../plugin/pluginManger';
-import { type ApmSenderType, createSender } from '../sender/sender';
 import { createTracker, type ApmTracker } from '../tracker/tracker';
 import { ApmError } from '../utils';
 import { Breadcrumb, type ApmBreadcrumbConfigure, type BreadcrumbPushData } from './breadcrumb';
@@ -11,18 +10,9 @@ export interface APMConfig {
   plugins?: APMPlugin[];
   /** 开启debug信息*/
   debug?: boolean;
-  /** SenderConfigure */
-  senderConfigure: {
-    url: string;
-    mode?: keyof ApmSenderType;
-    /** xhr|fetch 传递的header */
-    header?: Record<string, string>;
-    /** 默认防抖3秒 */
-    interval?: number;
-    fetchOptions?: RequestInit;
-  } & Record<string, unknown>;
-
   breadcrumbConfigure?: ApmBreadcrumbConfigure;
+  /** 防抖 */
+  interval: number;
 }
 
 export interface ApmClient {
@@ -31,6 +21,8 @@ export interface ApmClient {
   plugins: PluginManger;
   transport(data: BreadcrumbPushData, immediate?: boolean): void;
 }
+
+export type ApmSenderFactory = (client: ApmClient) => (data: unknown) => Promise<void>;
 
 export class Client implements ApmClient {
   config: APMConfig;
@@ -42,12 +34,14 @@ export class Client implements ApmClient {
   private breadcrumb: Breadcrumb;
 
   private timer: NodeJS.Timeout | null = null;
-  constructor(config: APMConfig, pluginController: PluginManger) {
+  constructor(config: APMConfig, pluginController: PluginManger, senderFactory: ApmSenderFactory) {
     this.config = config;
     this.plugins = pluginController;
-    this.tracker = createTracker(this);
-    this.sender = createSender(config, this);
     this.breadcrumb = new Breadcrumb(config.breadcrumbConfigure);
+
+    this.tracker = createTracker(this);
+    // this.sender = createSender(config, this);
+    this.sender = senderFactory(this);
   }
 
   init(onComplete?: () => void, onFailed?: (e: unknown) => void) {
@@ -81,7 +75,7 @@ export class Client implements ApmClient {
         this.breadcrumb.debugger(`will sender`, this.breadcrumb.getStack());
         this.transportIdle(this.breadcrumb.getStack(), () => this.breadcrumb.flush());
       },
-      this.config.senderConfigure?.interval || 5000,
+      this.config?.interval || 5000,
     );
   }
 
@@ -99,14 +93,14 @@ export class Client implements ApmClient {
   }
 }
 
-export function createClient(config: APMConfig) {
+export interface ApmCreateClientOpts {
+  senderFactory: ApmSenderFactory;
+}
+
+export function createClient(config: APMConfig, opts: ApmCreateClientOpts) {
   const defaultConfig: APMConfig = {
     debug: false,
-    senderConfigure: {
-      mode: 'beacon',
-      interval: 3000,
-      url: 'xxxx',
-    },
+    interval: 5000,
   };
 
   const userConfig = Object.assign({}, defaultConfig, config);
@@ -117,7 +111,7 @@ export function createClient(config: APMConfig) {
 
   const pluginManger = new PluginManger(plugins);
 
-  const client = new Client(userConfig, pluginManger);
+  const client = new Client(userConfig, pluginManger, opts.senderFactory);
 
   return client;
 }
