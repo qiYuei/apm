@@ -1,6 +1,7 @@
 import type { ApmSeverity, ApmReportType } from '@apm/shared';
 import type { ApmClient } from '../client';
 import { createDebugger } from '../utils/debug';
+import type { ApmPerformanceSubType, ApmResourceSubType, ApmErrorSubType } from '../types';
 
 interface ApmErrorStack {
   filename?: string;
@@ -10,7 +11,7 @@ interface ApmErrorStack {
 }
 
 interface ApmErrorTracker {
-  subType: 'js' | 'Promise';
+  subType: ApmErrorSubType;
   type: 'error';
   startTime: number;
   pageURL: string;
@@ -22,6 +23,7 @@ interface ApmErrorTracker {
 
 interface ApmResourceErrorTracker {
   type: 'resource';
+  subType: ApmResourceSubType;
   tagName: string;
   pageURL: string;
   startTime: number;
@@ -29,10 +31,17 @@ interface ApmResourceErrorTracker {
   msg: string;
   outHtml?: string;
 }
+interface ApmPerformanceTracker {
+  type: 'performance';
+  subType: ApmPerformanceSubType;
+  indicator: number;
+  indicatorName: string;
+}
 
 export interface ApmTrackerType {
   error: ApmErrorTracker;
   resource: ApmResourceErrorTracker;
+  performance: ApmPerformanceTracker;
   custom: Record<string, unknown>;
 }
 

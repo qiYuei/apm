@@ -1,19 +1,20 @@
 import type { APMPlugin } from '@apm/core';
 import { isSupportPerformanceObserver } from '../../shared/utils';
 
-export function fp(): APMPlugin {
+export function fcp(): APMPlugin {
   return {
-    name: 'performance-fp-plugin',
+    name: 'performance-fcp-plugin',
     setup(client) {
       if (!isSupportPerformanceObserver()) return;
 
       const entryHandler = (list: PerformanceObserverEntryList) => {
         for (const entry of list.getEntries()) {
-          if (entry.name === 'first-paint') {
+          console.log('PerformanceObserver entry', entry);
+          if (entry.name === 'first-contentful-paint') {
             client.tracker(
               {
                 type: 'performance',
-                subType: 'FP',
+                subType: 'FCP',
                 indicator: entry.startTime,
                 indicatorName: entry.name,
               },

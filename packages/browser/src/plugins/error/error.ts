@@ -1,3 +1,4 @@
+import type { ApmResourceSubType } from '@apm/core';
 import { rewrite, type APMPlugin } from '@apm/core';
 import { WINDOW } from '../../shared';
 import { getPageUrl } from '../../shared/utils';
@@ -10,6 +11,22 @@ const resourceMap: Record<string, string> = {
   script: 'JS脚本',
   link: '资源文件',
 };
+
+// const fileReg = /\/(${w+}).${w+}?\?/g;
+
+const tagAndFileTypeMap: Record<string, ApmResourceSubType> = {
+  script: 'JS',
+  img: 'IMAGE',
+};
+
+function parseFileType(tag: string, url: string | null): ApmResourceSubType {
+  const match = tagAndFileTypeMap[tag];
+  if (match) return match;
+
+  if (!url) return 'OTHERS';
+  // 尝试从url中解析
+  return 'OTHERS';
+}
 
 export function ApmErrorPlugin(): APMPlugin {
   return {
@@ -40,7 +57,7 @@ export function ApmErrorPlugin(): APMPlugin {
           client.tracker(
             {
               type: 'error',
-              subType: 'js',
+              subType: 'JS',
               startTime: getTimestamp(),
               stack: parseStackFrames(error!),
               msg: unknownErrorEvtToString(ev as ErrorEvent),
@@ -66,7 +83,7 @@ export function ApmErrorPlugin(): APMPlugin {
             client.tracker(
               {
                 type: 'error',
-                subType: 'js',
+                subType: 'JS',
                 startTime: getTimestamp(),
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
                 stack: parseStackFrames(error),
@@ -88,6 +105,7 @@ export function ApmErrorPlugin(): APMPlugin {
                 msg: `${resourceMap[tag]}: 加载失败`,
                 url: url!,
                 outHtml: html,
+                subType: parseFileType(tag, url),
               },
               'Resource',
             );
@@ -103,7 +121,7 @@ export function ApmErrorPlugin(): APMPlugin {
           client.tracker(
             {
               type: 'error',
-              subType: 'Promise',
+              subType: 'PROMISE',
               msg: unknownErrorEvtToString(ev.reason as string),
               stack: parseStackFrames(ev.reason as Error),
               startTime: getTimestamp(),

@@ -36,4 +36,5 @@ export type ApmReportType =
   | 'Fetch'
   | 'Resource'
   | 'Customer'
-  | 'Apm';
+  | 'Apm'
+  | 'Performance';
