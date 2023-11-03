@@ -45,6 +45,12 @@ function rescourceError() {
     document.body.appendChild(script)
   }, 3000)
 }
+
+function asyncError() {
+  setTimeout(function b() {
+    ppt.push(123)
+  }, 3000)
+}
 </script>
 
 <template>
@@ -63,6 +69,7 @@ function rescourceError() {
       <button @click="rescourceError">资源加载</button>
       <button @click="promiseError">Promise</button>
       <button @click="promiseError2">Promise2</button>
+      <button @click="asyncError">异步错误</button>
     </div>
   </header>
 

@@ -12,9 +12,6 @@ export function getPageUrl() {
   return window.location.href;
 }
 
-export function isSupportPerformanceObserver() {
-  return !!window.PerformanceObserver;
-}
 export function isSupportSendBeacon() {
   const isRealNavigator =
     Object.prototype.toString.call(window && window.navigator) === '[object Navigator]';

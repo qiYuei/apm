@@ -1,6 +1,6 @@
 import { createClient, type ApmClient } from '@apm/core'
 import { getPageUrl } from '@apm/shared'
-import { ApmErrorPlugin, createBrowserClient, ApmDevicePlugin } from '@apm/browser'
+import { ApmErrorPlugin, createBrowserClient, ApmDevicePlugin, fp } from '@apm/browser'
 const client = createBrowserClient({
   monitor: {
     error: true
@@ -59,7 +59,8 @@ const client = createBrowserClient({
         }
       })(),
       ApmErrorPlugin(),
-      ApmDevicePlugin()
+      ApmDevicePlugin(),
+      fp()
     ]
   }
 })

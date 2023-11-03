@@ -20,3 +20,7 @@ export function getEventTrigger(el: HTMLElement) {
     html: el.outerHTML,
   };
 }
+
+export function isSupportPerformanceObserver() {
+  return !!window.PerformanceObserver;
+}

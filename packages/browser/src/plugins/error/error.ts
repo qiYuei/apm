@@ -15,6 +15,22 @@ export function ApmErrorPlugin(): APMPlugin {
     name: 'apm-error-plugin',
     setup(client) {
       const globalObject = WINDOW as unknown as { [key: string]: unknown };
+
+      // 异步错误还是捕获不到
+
+      // rewrite(globalObject, 'setTimeout', function (original) {
+      //   return (fn, timeStamp) => {
+      //     console.log('有没有走这里.........', fn.name, timeStamp);
+      //     try {
+      //       const res = original.apply(null, [fn, timeStamp]);
+
+      //       return res;
+      //     } catch (error) {
+      //       console.log('setTimeout error', error);
+      //     }
+      //   };
+      // });
+
       rewrite(globalObject, 'onerror', function (original): OnErrorEventHandler {
         return function (...opts) {
           const [ev, , row, col, error] = opts;
@@ -42,6 +58,7 @@ export function ApmErrorPlugin(): APMPlugin {
       window.addEventListener(
         'error',
         (ev: ErrorEvent) => {
+          console.log('error', ev);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const { error } = ev as { error: Error };
           if (ev instanceof ErrorEvent) {
@@ -82,7 +99,6 @@ export function ApmErrorPlugin(): APMPlugin {
       window.addEventListener(
         'unhandledrejection',
         (ev) => {
-          console.log(ev, 'Promise');
           client.tracker(
             {
               type: 'error',

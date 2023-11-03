@@ -1,6 +1,6 @@
 import type { APMPlugin } from '@apm/core';
 
-export interface PageInformation {
+export interface deviceInformation {
   host: string;
   hostname: string;
   href: string;
@@ -25,7 +25,7 @@ export interface PageInformation {
   pixelDepth: number;
 }
 
-const getPageInfo = (): PageInformation => {
+const getDeviceInfo = (): deviceInformation => {
   const { host, hostname, href, protocol, origin, port, pathname, search, hash } = window.location;
   const { width, height, colorDepth, pixelDepth } = window.screen;
   const { language, userAgent } = navigator;
@@ -53,12 +53,12 @@ const getPageInfo = (): PageInformation => {
 };
 
 export function ApmDevicePlugin(): APMPlugin {
-  const pageInfo = getPageInfo();
+  const deviceInfo = getDeviceInfo();
 
   return {
     name: 'apm-uv-plugin',
     beforeSend(sendData) {
-      sendData.deviceBlock = pageInfo;
+      sendData.deviceBlock = deviceInfo;
     },
   };
 }
