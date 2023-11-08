@@ -56,7 +56,7 @@ export function ApmDevicePlugin(): APMPlugin {
   const deviceInfo = getDeviceInfo();
 
   return {
-    name: 'apm-uv-plugin',
+    name: 'apm-device-plugin',
     beforeSend(sendData) {
       sendData.deviceBlock = deviceInfo;
     },
