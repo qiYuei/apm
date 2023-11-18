@@ -78,38 +78,28 @@ export function ApmErrorPlugin(): APMPlugin {
         (ev: ErrorEvent) => {
           console.log('error', ev);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const { error } = ev as { error: Error };
-          if (ev instanceof ErrorEvent) {
-            client.tracker(
-              {
-                type: 'error',
-                subType: 'JS',
-                startTime: getTimestamp(),
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-                stack: parseStackFrames(error),
-                msg: unknownErrorEvtToString(error),
-                column: ev.colno,
-                line: ev.lineno,
-                pageURL: getPageUrl(),
-              },
-              'Error',
-            );
-          } else {
-            const { tag, url, html } = getEventTrigger((ev as Event).target as HTMLElement);
-            client.tracker(
-              {
-                type: 'resource',
-                pageURL: getPageUrl(),
-                startTime: getTimestamp(),
-                tagName: tag,
-                msg: `${resourceMap[tag]}: 加载失败`,
-                url: url!,
-                outHtml: html,
-                subType: parseFileType(tag, url),
-              },
-              'Resource',
-            );
-          }
+          const target: unknown = ev.target || ev.srcElement;
+          const isElementTarget =
+            target instanceof HTMLScriptElement ||
+            target instanceof HTMLLinkElement ||
+            target instanceof HTMLImageElement;
+          // 防止被触发跟 onerror 一样的上报信息
+          if (!isElementTarget) return false;
+
+          const { tag, url, html } = getEventTrigger((ev as Event).target as HTMLElement);
+          client.tracker(
+            {
+              type: 'resource',
+              pageURL: getPageUrl(),
+              startTime: getTimestamp(),
+              tagName: tag,
+              msg: `${resourceMap[tag]}: 加载失败`,
+              url: url!,
+              outHtml: html,
+              subType: parseFileType(tag, url),
+            },
+            'Resource',
+          );
         },
         true,
       );

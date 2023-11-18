@@ -1,6 +1,7 @@
 import { PluginManger, type APMPlugin } from '../plugin/pluginManger';
-import { createTracker, type ApmTracker } from '../tracker/tracker';
+import { createTracker, type ApmTracker, type ApmErrorTracker } from '../tracker';
 import { ApmError } from '../utils';
+import { createErrorEventId } from '../utils/error';
 import { Breadcrumb, type ApmBreadcrumbConfigure, type BreadcrumbPushData } from './breadcrumb';
 
 export interface APMConfig {
@@ -34,6 +35,8 @@ export class Client implements ApmClient {
   private breadcrumb: Breadcrumb;
 
   private timer: NodeJS.Timeout | null = null;
+
+  private trackErrorIdMap: Map<string, boolean> = new Map();
   constructor(config: APMConfig, pluginController: PluginManger, senderFactory: ApmSenderFactory) {
     this.config = config;
     this.plugins = pluginController;
@@ -58,8 +61,16 @@ export class Client implements ApmClient {
         onFailed?.(e);
       });
   }
-  //  init 实现队列
   transport(data: BreadcrumbPushData, immediate = false) {
+    if (data.type === 'Error') {
+      const errorId = createErrorEventId(data.data as ApmErrorTracker);
+      if (this.trackErrorIdMap.has(errorId)) return;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      data.data.ErrorId = errorId;
+      this.trackErrorIdMap.set(errorId, true);
+    }
+
     if (immediate) {
       this.transportIdle(data);
       return;

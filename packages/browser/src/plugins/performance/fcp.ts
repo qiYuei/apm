@@ -1,6 +1,10 @@
 import type { APMPlugin } from '@apm/core';
 import { observer } from '../../shared/observer';
-
+/**
+ * First Contentful Paint (FCP) is when the browser renders the first bit of content from the DOM,
+ * providing the first feedback to the user that the page is actually loading
+ * (https://developer.mozilla.org/en-US/docs/Glossary/First_contentful_paint)
+ * */
 export function fcp(): APMPlugin {
   return {
     name: 'performance-fcp-plugin',

@@ -10,7 +10,7 @@ interface ApmErrorStack {
   colno?: number;
 }
 
-interface ApmErrorTracker {
+export interface ApmErrorTracker {
   subType: ApmErrorSubType;
   type: 'error';
   startTime: number;
@@ -38,10 +38,41 @@ interface ApmPerformanceTracker {
   indicatorName: string;
 }
 
+export interface ApmPerformanceTimingTracker {
+  type: 'timing';
+  /** 白屏时间 - 从请求开始到开始解析html首个字节时间 */
+  FP: number;
+  /** 首次可交互时间 - 浏览器解析完html并完成dom构建,还没有触发domContentLoad */
+  TTI: number;
+  /** 触发完 domContentLoad 事件 */
+  DomReady: number;
+  /** 触发完 load 事件 */
+  Load: number;
+  /** 首包时间 - 发送请求到接收首个字节 */
+  FirstByte: number;
+  /** dns 解析耗时 */
+  DNS: number;
+  /** tcp 连接耗时 */
+  TCP: number;
+  /** 只有 https 有效,其他都是 0  */
+  SSL: number;
+  /** 请求响应耗时 */
+  TTFB: number;
+  /** 内容传输耗时,此时请求已结束 */
+  Trans: number;
+  /** DOM解析耗时 */
+  DOM: number;
+  /** 资源加载耗时 */
+  RES: number;
+  /** 完整的timing */
+  fullTiming: unknown;
+}
+
 export interface ApmTrackerType {
   error: ApmErrorTracker;
   resource: ApmResourceErrorTracker;
   performance: ApmPerformanceTracker;
+  timing: ApmPerformanceTimingTracker;
   custom: Record<string, unknown>;
 }
 
