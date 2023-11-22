@@ -1,0 +1,7 @@
+{
+  "extends": "next/core-web-vitals",
+  "root": true,
+  "rules": {
+    "import/no-anonymous-default-export": "off"
+  }
+}
