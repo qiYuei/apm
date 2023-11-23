@@ -22,5 +22,5 @@ export function hashCode(str: string): string {
     hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
-  return String(hash);
+  return hash.toString(16);
 }

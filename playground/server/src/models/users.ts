@@ -1,24 +1,45 @@
-import { Model, Sequelize, DataTypes } from 'sequelize';
-class users extends Model {
-  /**
-   * Helper method for defining associations.
-   * This method is not a part of Sequelize lifecycle.
-   * The `models/index` file will call this method automatically.
-   */
-  // static associate(models) {
-  //    define association here
-  // }
-}
+import {
+  Model,
+  Sequelize,
+  DataTypes,
+  type InferAttributes,
+  type InferCreationAttributes,
+} from 'sequelize';
+
 export default (sequelize: Sequelize) => {
-  users.init(
+  class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    // static associate(models) {
+    //    define association here
+    // }
+  }
+  User.init(
     {
-      firstName: DataTypes.STRING,
-      lastName: DataTypes.STRING,
-      username: DataTypes.STRING,
-      email: DataTypes.STRING,
-      phoneNumber: DataTypes.STRING,
-      gender: DataTypes.STRING,
-      status: DataTypes.BOOLEAN,
+      uid: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      token: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      user_agent: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      ip_address: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      device: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
     },
     {
       sequelize,
@@ -26,5 +47,5 @@ export default (sequelize: Sequelize) => {
     },
   );
 
-  return users;
+  return User;
 };

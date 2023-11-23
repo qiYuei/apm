@@ -1,11 +1,10 @@
 import fs from 'node:fs';
 import path, { posix } from 'path';
 import { Sequelize, Model, type ModelStatic } from 'sequelize';
-import process from 'process';
 import mysql2 from 'mysql2';
 import { fileURLToPath, URL } from 'node:url';
 import os from 'node:os';
-
+import { IModelsMapping } from './model.type';
 export const isWindows = os.platform() === 'win32';
 export function normalizePath(path: string) {
   return posix.normalize(isWindows ? path.replace(/\\/g, '/') : path);
@@ -19,7 +18,18 @@ const config = {
   port: '3308',
   dialect: 'mysql',
 };
-const db = {} as Record<string, ModelStatic<Model>>;
+
+type ConnectDB = Record<IModelsMapping, ModelStatic<Model>>;
+
+const db = {} as ConnectDB;
+
+interface IConnect {
+  models: ConnectDB;
+  Sequelize: typeof Sequelize;
+  sequelize: Sequelize;
+}
+
+let connect: IConnect | null = null;
 
 async function initModels() {
   let sequelize = new Sequelize(config.database, config.username, config.password, {
@@ -30,31 +40,33 @@ async function initModels() {
   });
 
   const modelsPath = path.dirname(fileURLToPath(new URL(import.meta.url)));
-  console.log(fs.readdirSync(modelsPath));
 
   const models = fs.readdirSync(modelsPath).filter((file) => {
-    return file.indexOf('.') !== 0 && file !== 'index.ts';
+    return file.indexOf('.') !== 0 && file !== 'index.ts' && file !== 'model.type.ts';
   });
+
+  function writeDts(mapping: string[]) {
+    const dts = mapping.reduce((pre, model, index) => {
+      pre += `${index > 0 ? '|' : ''}"${model}"`;
+      return pre;
+    }, `export type IModelsMapping = `);
+    fs.writeFileSync(path.join(modelsPath, 'model.type.ts'), dts);
+  }
 
   for (let file of models) {
     const modules = await import(`./${file}`);
-    debugger;
     const model = await modules.default(sequelize);
+    // @ts-ignore
     db[model.name] = model;
   }
 
-  // console.log(Object.keys(db), '-------------------------');
-
-  // Object.keys(db).forEach((modelName) => {
-  //   if (db[modelName]?.associate) {
-  //     db[modelName]?.associate(db);
-  //   }
-  // });
+  writeDts(Object.keys(db));
 
   // sync table
   await sequelize.sync();
 
-  return { models: db, sequelize, Sequelize };
+  connect = { models: db, sequelize, Sequelize };
+  return connect;
 }
 
 export default initModels;

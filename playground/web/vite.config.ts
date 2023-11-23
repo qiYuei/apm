@@ -14,5 +14,13 @@ export default defineConfig({
       '@apm/shared': fileURLToPath(new URL('../../packages/shared/src', import.meta.url)),
       '@apm/browser': fileURLToPath(new URL('../../packages/browser/src', import.meta.url))
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:3000',
+        changeOrigin: true
+      }
+    }
   }
 })

@@ -1,13 +1,5 @@
 import { type ApmClient } from '@apm/core'
-import {
-  ApmErrorPlugin,
-  createBrowserClient,
-  ApmDevicePlugin,
-  fp,
-  fcp,
-  lcp,
-  timeLine
-} from '@apm/browser'
+import { ApmErrorPlugin, createBrowserClient, fp, fcp, lcp, timeLine } from '@apm/browser'
 
 const client = createBrowserClient({
   monitor: {
@@ -15,7 +7,16 @@ const client = createBrowserClient({
   },
   senderConfigure: {
     mode: 'fetch',
-    url: 'xxxxx'
+    url: 'http://localhost:3000/api/report',
+    beforeSender(data, config) {
+      console.log('没走这个？')
+      return {
+        hint: {
+          time: Date.now(),
+          reports: data
+        }
+      }
+    }
   },
   apmConfig: {
     interval: 5000,
@@ -49,7 +50,6 @@ const client = createBrowserClient({
         }
       })(),
       ApmErrorPlugin(),
-      ApmDevicePlugin(),
       fp(),
       fcp(),
       lcp(),

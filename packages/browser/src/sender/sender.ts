@@ -1,6 +1,6 @@
 import type { ApmBrowserConfigure } from '../client/browser';
 import { isSupportFetch, isSupportSendBeacon } from '../shared/utils';
-import type { ApmClient } from '@apm/core';
+import { type ApmClient, type BreadcrumbPushData } from '@apm/core';
 
 interface ApmBaseSender {
   url: string;
@@ -30,6 +30,25 @@ export interface ApmSenderType {
 
 export type ApmSender = ApmImageSender | ApmXhrSender | ApmFetchSender | ApmBeaconSender;
 
+export interface ApmBrowserSenderData {
+  data: BreadcrumbPushData[];
+  ticket: string;
+}
+
+export interface ApmBrowserSenderConfigure {
+  url: string;
+  mode?: keyof ApmSenderType;
+  /** xhr|fetch 传递的header */
+  header?: Record<string, string>;
+  /** 默认防抖3秒 */
+  interval?: number;
+  fetchOptions?: RequestInit;
+  beforeSender?: (
+    data: ApmBrowserSenderData['data'],
+    config: ApmBrowserConfigure,
+  ) => boolean | void | Record<string, unknown> | Array<unknown>;
+}
+
 /**
  * 降级处理如果window.navigator.sendBeacon 不支持
  * 则采用 fetch|xhr 降级处理
@@ -43,7 +62,7 @@ function useBeacon() {
   return isSupportFetch() ? fetchSender : xhrSender;
 }
 
-export function createSender(config: ApmBrowserConfigure) {
+export function createSender(config: ApmBrowserConfigure, ticket: string) {
   const { senderConfigure = { mode: 'beacon' } } = config;
 
   return (client: ApmClient) => {
@@ -64,12 +83,23 @@ export function createSender(config: ApmBrowserConfigure) {
         break;
     }
 
-    return async (data: unknown) => {
+    return async (data: BreadcrumbPushData[]) => {
       const sendConfig = {
         ...senderConfigure,
         data,
       };
+      if (config.senderConfigure.beforeSender) {
+        const res = config.senderConfigure.beforeSender(data, config);
+        console.log(res, 'res---------------------');
+        if (typeof res === 'boolean' || !res) return;
 
+        sendConfig.data = {
+          ...res,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          ticket,
+        };
+      }
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore todo
       sender(sendConfig);

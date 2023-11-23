@@ -23,7 +23,7 @@ export interface ApmClient {
   transport(data: BreadcrumbPushData, immediate?: boolean): void;
 }
 
-export type ApmSenderFactory = (client: ApmClient) => (data: unknown) => Promise<void>;
+export type ApmSenderFactory = (client: ApmClient) => (data: BreadcrumbPushData[]) => Promise<void>;
 
 export class Client implements ApmClient {
   config: APMConfig;
@@ -31,7 +31,7 @@ export class Client implements ApmClient {
   tracker: ApmTracker;
 
   private initd: boolean = false;
-  private sender: (data: unknown) => Promise<void>;
+  private sender: (data: BreadcrumbPushData[]) => Promise<void>;
   private breadcrumb: Breadcrumb;
 
   private timer: NodeJS.Timeout | null = null;

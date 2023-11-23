@@ -8,7 +8,7 @@ interface ApmParallelHook {
 }
 
 interface ApmBailHook {
-  beforeSend?: (sendData: BreadcrumbPushData) => MaybePromise<void | boolean>;
+  beforePush?: (sendData: BreadcrumbPushData) => MaybePromise<void | boolean>;
 }
 
 interface ApmSerialHook {

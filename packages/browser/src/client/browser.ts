@@ -1,7 +1,9 @@
 import type { ApmClient } from '@apm/core';
 import { createClient, type APMConfig, type APMPlugin, ApmError } from '@apm/core';
 import { mergeConfigure } from '../shared/utils';
-import { type ApmSenderType, createSender } from '../sender/sender';
+import type { ApmBrowserSenderConfigure } from '../sender/sender';
+import { createSender } from '../sender/sender';
+import { getDeviceInfo } from '../plugins';
 
 export interface ApmBrowserMonitor {
   error?: boolean;
@@ -15,18 +17,26 @@ export interface ApmBrowserConfigure {
   plugins?: APMPlugin[];
   ready?: (client: ApmClient) => void;
   /** SenderConfigure */
-  senderConfigure: {
-    url: string;
-    mode?: keyof ApmSenderType;
-    /** xhr|fetch 传递的header */
-    header?: Record<string, string>;
-    /** 默认防抖3秒 */
-    interval?: number;
-    fetchOptions?: RequestInit;
-  } & Record<string, unknown>;
+  senderConfigure: ApmBrowserSenderConfigure;
 }
 
-export function createBrowserClient(userConfigure: ApmBrowserConfigure) {
+function verify(params: Record<string, unknown>) {
+  return fetch('/api/token', {
+    method: 'post',
+    body: JSON.stringify(params),
+  })
+    .then((r) => r.json())
+    .then((res: Record<string, unknown>) => res.data as Record<string, string>);
+}
+
+export async function createBrowserClient(userConfigure: ApmBrowserConfigure) {
+  const res: Record<'token', string> = await verify({
+    platform: 'browser',
+    devices: getDeviceInfo(),
+  });
+
+  console.log(res, '-------------------------');
+
   const defaultPlugins = [] as APMPlugin[];
 
   const plugins = [...defaultPlugins, ...(userConfigure.plugins || [])];
@@ -43,7 +53,7 @@ export function createBrowserClient(userConfigure: ApmBrowserConfigure) {
   }
 
   const client = createClient(configure.apmConfig, {
-    senderFactory: createSender(configure),
+    senderFactory: createSender(configure, res.token),
   });
 
   client.init(
@@ -57,4 +67,6 @@ export function createBrowserClient(userConfigure: ApmBrowserConfigure) {
       client.transport(ApmError({ msg: 'sdk init fail', e }));
     },
   );
+
+  return client;
 }
