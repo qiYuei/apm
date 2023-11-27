@@ -16,7 +16,7 @@ export function fp(): APMPlugin {
           if (entry.name === 'first-paint') {
             client.tracker(
               {
-                type: 'performance',
+                type: 'Performance',
                 subType: 'FP',
                 indicator: entry.startTime,
                 indicatorName: entry.name,

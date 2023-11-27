@@ -14,7 +14,7 @@ export function fcp(): APMPlugin {
           if (entry.name === 'first-contentful-paint') {
             client.tracker(
               {
-                type: 'performance',
+                type: 'Performance',
                 subType: 'FCP',
                 indicator: entry.startTime,
                 indicatorName: entry.name,

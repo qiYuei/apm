@@ -26,15 +26,3 @@ export enum ReportType {
   CUSTOMER = 'Customer',
   APM = 'Apm',
 }
-
-export type ApmReportType =
-  | 'Error'
-  | 'Vue'
-  | 'React'
-  | 'Route'
-  | 'Xhr'
-  | 'Fetch'
-  | 'Resource'
-  | 'Customer'
-  | 'Apm'
-  | 'Performance';

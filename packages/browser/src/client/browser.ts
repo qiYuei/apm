@@ -26,14 +26,18 @@ function verify(params: Record<string, unknown>) {
     body: JSON.stringify(params),
   })
     .then((r) => r.json())
-    .then((res: Record<string, unknown>) => res.data as Record<string, string>);
+    .then((res: Record<string, unknown>) => res.data as Record<string, string>)
+    .catch((res) => {
+      console.log(res);
+      return false;
+    });
 }
 
 export async function createBrowserClient(userConfigure: ApmBrowserConfigure) {
   const res: Record<'token', string> = await verify({
     platform: 'browser',
     devices: getDeviceInfo(),
-  });
+  }).catch(() => {});
 
   console.log(res, '-------------------------');
 

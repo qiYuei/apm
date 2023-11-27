@@ -40,6 +40,9 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.TEXT,
         allowNull: false,
       },
+      last_record: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,

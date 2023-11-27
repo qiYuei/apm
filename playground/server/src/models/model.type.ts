@@ -1,1 +1,1 @@
-export type IModelsMapping = "errorBreadcrumb"|"users"
+export type IModelsMapping = "errorBreadcrumb"|"performanceBreadcrumb"|"resourceBreadcrumb"|"users"

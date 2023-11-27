@@ -20,7 +20,7 @@ export function lcp(): APMPlugin {
           if (entry.name === 'largest-contentful-paint') {
             client.tracker(
               {
-                type: 'performance',
+                type: 'Performance',
                 indicatorName: entry.name,
                 subType: 'LCP',
                 indicator: entry.startTime,

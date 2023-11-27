@@ -1,5 +1,6 @@
 import { createDebugger } from '../utils/debug';
-import { getTimestamp, type ApmReportType, type ApmSeverity } from '@apm/shared';
+import { getTimestamp, type ApmSeverity } from '@apm/shared';
+import type { ApmReportType } from '../tracker';
 export interface ApmBreadcrumbConfigure {
   max?: number;
   beforePushBreadcrumb?: (data: BreadcrumbPushData, stack: BreadcrumbPushData[]) => boolean | void;

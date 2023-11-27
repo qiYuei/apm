@@ -1,4 +1,4 @@
-import type { ApmSeverity, ApmReportType } from '@apm/shared';
+import type { ApmSeverity } from '@apm/shared';
 import type { ApmClient } from '../client';
 import { createDebugger } from '../utils/debug';
 import type { ApmPerformanceSubType, ApmResourceSubType, ApmErrorSubType } from '../types';
@@ -12,7 +12,7 @@ interface ApmErrorStack {
 
 export interface ApmErrorTracker {
   subType: ApmErrorSubType;
-  type: 'error';
+  type: 'Error';
   startTime: number;
   pageURL: string;
   msg: string;
@@ -22,24 +22,25 @@ export interface ApmErrorTracker {
 }
 
 interface ApmResourceErrorTracker {
-  type: 'resource';
+  type: 'Resource';
   subType: ApmResourceSubType;
   tagName: string;
   pageURL: string;
   startTime: number;
-  url: string;
+  src: string;
   msg: string;
   outHtml?: string;
 }
 interface ApmPerformanceTracker {
-  type: 'performance';
+  type: 'Performance';
   subType: ApmPerformanceSubType;
   indicator: number;
   indicatorName: string;
 }
 
 export interface ApmPerformanceTimingTracker {
-  type: 'timing';
+  type: 'Performance';
+  subType: 'timing';
   /** 白屏时间 - 从请求开始到开始解析html首个字节时间 */
   FP: number;
   /** 首次可交互时间 - 浏览器解析完html并完成dom构建,还没有触发domContentLoad */
@@ -69,12 +70,13 @@ export interface ApmPerformanceTimingTracker {
 }
 
 export interface ApmTrackerType {
-  error: ApmErrorTracker;
-  resource: ApmResourceErrorTracker;
-  performance: ApmPerformanceTracker;
-  timing: ApmPerformanceTimingTracker;
-  custom: Record<string, unknown>;
+  Error: ApmErrorTracker;
+  Resource: ApmResourceErrorTracker;
+  Performance: ApmPerformanceTracker | ApmPerformanceTimingTracker;
+  Custom: Record<string, unknown>;
 }
+
+export type ApmReportType = keyof ApmTrackerType;
 
 export type ApmTrackerOptions<T extends keyof ApmTrackerType> = {
   type: T;
@@ -102,7 +104,7 @@ export function createTracker(client: ApmClient): ApmTracker {
       level: options.level,
     };
 
-    const result = await client.plugins.callBailHook('beforeSend', transportData);
+    const result = await client.plugins.callBailHook('beforePush', transportData);
 
     if (result === false) return; // skip
 

@@ -1,9 +1,10 @@
-export type ResponseCode = 1 | 0;
+export type ResponseCode = 1 | -1;
 
 export type CustomResponse = {
   code: ResponseCode;
   data: unknown;
   message: string;
+  details?: string;
 };
 
 export function APMResponse(opt: Partial<CustomResponse>, responseOpts?: ResponseInit) {

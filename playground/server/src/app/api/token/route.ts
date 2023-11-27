@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
   const { models } = await initModels();
 
-  const [user] = await models.users.findOrCreate({
+  const [user, isCreate] = await models.users.findOrCreate({
     where: {
       token: hash,
     },
@@ -20,6 +20,10 @@ export async function POST(request: NextRequest) {
       ip_address: request.ip || 'unknown ip address',
       device: JSON.stringify(devices),
     },
+  });
+
+  await user.update({
+    last_record: Date.now(),
   });
 
   const result = user.toJSON();

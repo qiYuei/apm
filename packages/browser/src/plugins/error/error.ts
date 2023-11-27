@@ -56,7 +56,7 @@ export function ApmErrorPlugin(): APMPlugin {
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           client.tracker(
             {
-              type: 'error',
+              type: 'Error',
               subType: 'JS',
               startTime: getTimestamp(),
               stack: parseStackFrames(error!),
@@ -89,12 +89,12 @@ export function ApmErrorPlugin(): APMPlugin {
           const { tag, url, html } = getEventTrigger((ev as Event).target as HTMLElement);
           client.tracker(
             {
-              type: 'resource',
+              type: 'Resource',
               pageURL: getPageUrl(),
               startTime: getTimestamp(),
               tagName: tag,
               msg: `${resourceMap[tag]}: 加载失败`,
-              url: url!,
+              src: url!,
               outHtml: html,
               subType: parseFileType(tag, url),
             },
@@ -110,7 +110,7 @@ export function ApmErrorPlugin(): APMPlugin {
         (ev) => {
           client.tracker(
             {
-              type: 'error',
+              type: 'Error',
               subType: 'PROMISE',
               msg: unknownErrorEvtToString(ev.reason as string),
               stack: parseStackFrames(ev.reason as Error),
