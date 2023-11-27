@@ -37,6 +37,7 @@ async function initModels() {
     dialectModule: mysql2,
     host: 'localhost',
     port: 3308,
+    timezone: '+08:00', // 设置正确的时区，比如 '+08:00' 表示东八区
   });
 
   const modelsPath = path.dirname(fileURLToPath(new URL(import.meta.url)));
