@@ -16,6 +16,7 @@ export interface ApmErrorTracker {
   startTime: number;
   pageURL: string;
   msg: string;
+  error_constructor: string;
   line?: number;
   column?: number;
   stack?: string | Array<ApmErrorStack>;

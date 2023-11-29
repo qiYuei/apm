@@ -5,6 +5,7 @@ import { getPageUrl } from '../../shared/utils';
 import { getEventTrigger, unknownErrorEvtToString } from '../../shared/utils';
 import { parseStackFrames } from '../../shared/resolveStack';
 import { getTimestamp } from '@apm/shared';
+import { resolveErrorType } from '../../shared/resolveErrorType';
 
 const resourceMap: Record<string, string> = {
   img: '图片',
@@ -53,6 +54,7 @@ export function ApmErrorPlugin(): APMPlugin {
         return function (...opts) {
           const [ev, , row, col, error] = opts;
           // 从错误信息中提取信息堆栈等等，在上传
+          const msg = unknownErrorEvtToString(ev as ErrorEvent);
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           client.tracker(
             {
@@ -60,7 +62,8 @@ export function ApmErrorPlugin(): APMPlugin {
               subType: 'JS',
               startTime: getTimestamp(),
               stack: parseStackFrames(error!),
-              msg: unknownErrorEvtToString(ev as ErrorEvent),
+              msg: msg,
+              error_constructor: resolveErrorType(msg),
               column: col,
               pageURL: getPageUrl(),
               line: row,
@@ -108,12 +111,31 @@ export function ApmErrorPlugin(): APMPlugin {
       window.addEventListener(
         'unhandledrejection',
         (ev) => {
+          let error = ev as unknown;
+
+          try {
+            if ('reason' in ev) {
+              error = ev.reason;
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+            } else if ('detail' in ev && 'reason' in ev.detail) {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              error = ev.detail.reason;
+            }
+          } catch (_oO) {
+            // no-empty
+          }
+
           client.tracker(
             {
               type: 'Error',
               subType: 'PROMISE',
-              msg: unknownErrorEvtToString(ev.reason as string),
-              stack: parseStackFrames(ev.reason as Error),
+              error_constructor: 'unhandledrejection',
+              msg: unknownErrorEvtToString(error as string),
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+              stack: parseStackFrames(error as any),
               startTime: getTimestamp(),
               pageURL: getPageUrl(),
             },
