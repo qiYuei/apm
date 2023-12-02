@@ -13,7 +13,7 @@ function filter(reports: BreadcrumbPushData[]) {
       pre[report.type].push(report);
       return pre;
     },
-    { Custom: [], Error: [], Performance: [], Resource: [] } as Record<
+    { Custom: [], Error: [], Performance: [], Resource: [], Http: [] } as Record<
       keyof ApmTrackerType,
       BreadcrumbPushData[]
     >,
@@ -44,6 +44,10 @@ export async function POST(request: NextRequest) {
 
   const resourceReports = reports.filter((report) => report.type === 'Resource') as Array<
     ApmReport<'Resource'>
+  >;
+
+  const requestReports = reports.filter((report) => report.type === 'Http') as Array<
+    ApmReport<'Http'>
   >;
 
   const insertQueue = [];
@@ -109,6 +113,32 @@ export async function POST(request: NextRequest) {
             out_html: data.outHtml,
             user_point: ticket,
             start_time: data.startTime,
+          };
+        }),
+      ),
+    );
+  }
+
+  if (requestReports.length) {
+    insertQueue.push(
+      models.requestBreadcrumb.bulkCreate(
+        requestReports.map((r) => {
+          const { data } = r;
+          return {
+            sub_type: data.subType,
+            input: data.input,
+            method: data.method,
+            request_status: data.httpStatus,
+            body: data.body,
+            elapsed_time: data.elapsedTime,
+            network: data.netWork,
+            state: data.state,
+            message: data.message,
+            timing: data.timing,
+            user_point: ticket,
+            trigger_time: data.startTime,
+            report_time: reportTime,
+            notify_level: r.level,
           };
         }),
       ),

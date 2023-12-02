@@ -26,3 +26,7 @@ export enum ReportType {
   CUSTOMER = 'Customer',
   APM = 'Apm',
 }
+
+export type voidFun = (...args: unknown[]) => void;
+
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';

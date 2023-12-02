@@ -51,6 +51,27 @@ function asyncError() {
     ppt.push(123)
   }, 3000)
 }
+
+function xhrError() {
+  const xhr = new XMLHttpRequest()
+  xhr.open('GET', './test.js?abc=123454')
+  xhr.send()
+}
+
+function fetchError() {
+  fetch('./test.js?abc=123454')
+    .then((res) => {
+      console.log(res, '------------fetch res')
+    })
+    .catch((r) => {
+      console.log(r, '------------fetch')
+    })
+
+  fetch('./test', {
+    method: 'post',
+    body: JSON.stringify({ A: 1 })
+  })
+}
 </script>
 
 <template>
@@ -70,6 +91,8 @@ function asyncError() {
       <button @click="promiseError">Promise</button>
       <button @click="promiseError2">Promise2</button>
       <button @click="asyncError">异步错误</button>
+      <button @click="xhrError">xhr错误</button>
+      <button @click="fetchError">fetch错误</button>
     </div>
   </header>
 

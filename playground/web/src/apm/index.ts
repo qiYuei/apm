@@ -1,5 +1,13 @@
 import { type ApmClient } from '@apm/core'
-import { ApmErrorPlugin, createBrowserClient, fp, fcp, lcp, timeLine } from '@apm/browser'
+import {
+  ApmErrorPlugin,
+  createBrowserClient,
+  fp,
+  fcp,
+  lcp,
+  timeLine,
+  tryCatchPlugin
+} from '@apm/browser'
 
 const client = createBrowserClient({
   monitor: {
@@ -53,7 +61,8 @@ const client = createBrowserClient({
       fp(),
       fcp(),
       lcp(),
-      timeLine()
+      timeLine(),
+      tryCatchPlugin()
     ]
   }
 })

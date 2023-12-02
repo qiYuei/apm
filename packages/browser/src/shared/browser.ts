@@ -1,15 +1,12 @@
 import { rewrite } from '@apm/core';
-
-export type EventHandler<T extends keyof WindowEventMap> = (
-  this: Window,
-  event: WindowEventMap[T],
-) => void;
+import { type EventHandler, on } from './listeners';
 
 export function clientState(cb: (state: DocumentReadyState) => void) {
   rewrite(document as unknown as Record<string, unknown>, 'onreadystatechange', (original) => {
     return (...args: unknown[]) => {
       cb(document.readyState);
       if (typeof original === 'function') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         original.apply(document, args);
       }
     };
@@ -17,11 +14,11 @@ export function clientState(cb: (state: DocumentReadyState) => void) {
 }
 
 export const beforeUnload = (callback: EventHandler<'beforeunload'>) => {
-  window.addEventListener('beforeunload', callback);
+  on(window, 'beforeunload', callback);
 };
 
 export const unload = (callback: EventHandler<'unload'>) => {
-  window.addEventListener('unload', callback);
+  on(window, 'unload', callback);
 };
 
 export type OnHiddenCallback = (event: Event) => void;
@@ -53,5 +50,36 @@ export function getFirstHiddenTime() {
     get timeStamp() {
       return firstHiddenTime;
     },
+  };
+}
+
+export const whenActivated = (callback: () => void) => {
+  if (document.prerendering) {
+    addEventListener('prerenderingchange', () => callback(), true);
+  } else {
+    callback();
+  }
+};
+
+export function getNetworkStatus() {
+  if (navigator.connection) {
+    const { downlink, effectiveType, rtt } = navigator.connection;
+    return {
+      online: navigator.onLine,
+      effectiveType: effectiveType,
+      downlink: downlink,
+      rtt: rtt,
+    };
+  }
+  if (navigator.onLine !== undefined) {
+    return {
+      online: navigator.onLine,
+      effectiveType: '未知',
+    };
+  }
+  // 在某些情况下无法获取网络状态信息
+  return {
+    online: '未知',
+    effectiveType: '未知',
   };
 }

@@ -18,8 +18,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@apm/shared": "workspace:^1.0.0",
-    "@apm/core": "workspace:^1.0.0"
+    "@apm/core": "workspace:^1.0.0",
+    "@apm/shared": "workspace:^1.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.10"

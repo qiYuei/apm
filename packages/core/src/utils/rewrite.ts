@@ -1,8 +1,8 @@
 export function rewrite(
-  source: { [key: string]: unknown },
+  source: { [key: string]: any },
   name: string,
-  rewriteFactory: (...args: unknown[]) => unknown,
-): void {
+  rewriteFactory: (...args: any[]) => any,
+): any {
   if (!(name in source)) return;
 
   const original = source[name] as () => unknown;

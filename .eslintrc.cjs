@@ -17,5 +17,7 @@ module.exports = {
     '@typescript-eslint/require-await': 'off',
     'no-else-return': ['error', { allowElseIf: false }],
     '@typescript-eslint/no-floating-promises': 'off',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
   },
 };

@@ -1,4 +1,4 @@
-import type { ApmSeverity } from '@apm/shared';
+import type { ApmSeverity, HttpMethod } from '@apm/shared';
 import type { ApmClient } from '../client';
 import { createDebugger } from '../utils/debug';
 import type { ApmPerformanceSubType, ApmResourceSubType, ApmErrorSubType } from '../types';
@@ -39,6 +39,22 @@ interface ApmPerformanceTracker {
   indicatorName: string;
 }
 
+interface ApmHttpTracker {
+  type: 'Http';
+  subType: 'FETCH' | 'XHR';
+  input: string;
+  method: HttpMethod;
+  startTime: number;
+  elapsedTime: number;
+  state: 0 | 1;
+  error?: string;
+  body?: string;
+  netWork: string;
+  httpStatus: number;
+  message: string;
+  timing: string;
+}
+
 export interface ApmPerformanceTimingTracker {
   type: 'Performance';
   subType: 'timing';
@@ -74,6 +90,7 @@ export interface ApmTrackerType {
   Error: ApmErrorTracker;
   Resource: ApmResourceErrorTracker;
   Performance: ApmPerformanceTracker | ApmPerformanceTimingTracker;
+  Http: ApmHttpTracker;
   Custom: Record<string, unknown>;
 }
 

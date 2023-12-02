@@ -1,9 +1,9 @@
 import { Model, Sequelize, DataTypes } from 'sequelize';
 
-class errorBreadcrumb extends Model {}
+class requestBreadcrumb extends Model {}
 
 export default (sequelize: Sequelize) => {
-  errorBreadcrumb.init(
+  requestBreadcrumb.init(
     {
       auto_id: {
         type: DataTypes.UUID,
@@ -14,29 +14,36 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      error_id: {
+      input: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      error_tag: {
+      method: {
         type: DataTypes.STRING,
       },
-      brief_message: {
-        type: DataTypes.STRING,
-      },
-      stack: {
+      body: {
         type: DataTypes.TEXT,
       },
+      elapsed_time: {
+        type: DataTypes.INTEGER,
+      },
+      network: {
+        type: DataTypes.STRING,
+      },
+      state: {
+        type: DataTypes.INTEGER,
+      },
+      request_status: {
+        type: DataTypes.INTEGER,
+      },
+      message: {
+        type: DataTypes.TEXT,
+      },
+      timing: {
+        type: DataTypes.TEXT,
+      },
+
       user_point: {
-        type: DataTypes.STRING,
-      },
-      line: {
-        type: DataTypes.STRING,
-      },
-      column: {
-        type: DataTypes.STRING,
-      },
-      page_href: {
         type: DataTypes.STRING,
       },
       notify_level: {
@@ -49,8 +56,8 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.DATE,
       },
     },
-    { tableName: 'error', sequelize, timestamps: false },
+    { tableName: 'request', sequelize, timestamps: false },
   );
 
-  return errorBreadcrumb;
+  return requestBreadcrumb;
 };
