@@ -6,7 +6,7 @@ import {
   fcp,
   lcp,
   timeLine,
-  tryCatchPlugin
+  requestPlugin
 } from '@apm/browser'
 
 const client = createBrowserClient({
@@ -62,7 +62,7 @@ const client = createBrowserClient({
       fcp(),
       lcp(),
       timeLine(),
-      tryCatchPlugin()
+      requestPlugin()
     ]
   }
 })

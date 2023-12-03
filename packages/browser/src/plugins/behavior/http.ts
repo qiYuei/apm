@@ -1,12 +1,34 @@
-import { rewrite, type APMPlugin } from '@apm/core';
+import { rewrite } from '@apm/core';
 import { type HttpMethod, getTimestamp, type voidFun } from '@apm/shared';
 import { WINDOW } from '../../shared';
 import { getNetworkStatus } from '../../shared/browser';
 import { httpTransform } from '../../shared/httpTransform';
 import { resolveTiming } from '../../shared/timing';
 import { on } from '../../shared/listeners';
+import { type ApmBrowserPlugin } from '../../client/browser';
 
 type IBeforeTrackerReturn = { state: 'success' | 'failed'; error?: string };
+
+// 校验函数，检查给定的网址是否在白名单中
+function checkWhitelist(url: string, whitelist: string[] | undefined): boolean {
+  if (!whitelist || whitelist.length === 0) return false;
+  const parsedURL = new URL(url);
+
+  const pathname = parsedURL.pathname;
+  const searchParams = parsedURL.search;
+
+  return whitelist.some((item) => {
+    if (item.startsWith('http')) {
+      return url === item;
+    }
+    if (item.startsWith('/')) {
+      // 如果是路径，则使用正则表达式进行精确匹配
+      const regex = new RegExp(`^${item}(\\?|$)`);
+      return regex.test(pathname + searchParams);
+    }
+    return false;
+  });
+}
 
 interface ITryCatchOptions {
   xhr: boolean;
@@ -58,7 +80,7 @@ function beforeSendHook(
   return send;
 }
 
-export function tryCatchPlugin(opts?: Partial<ITryCatchOptions>): APMPlugin {
+export function requestPlugin(opts?: Partial<ITryCatchOptions>): ApmBrowserPlugin {
   const _opts: ITryCatchOptions = {
     xhr: true,
     fetch: true,
@@ -68,8 +90,8 @@ export function tryCatchPlugin(opts?: Partial<ITryCatchOptions>): APMPlugin {
 
   return {
     name: 'apm-tryCatch-plugin',
-    configure(config: Record<string, any>) {
-      _opts.whiteList?.push(config.url);
+    configure(configure) {
+      _opts.whiteList?.push(configure.senderConfigure.url);
     },
     setup(client) {
       const globalObject = WINDOW as unknown as { [key: string]: unknown };
@@ -93,6 +115,7 @@ export function tryCatchPlugin(opts?: Partial<ITryCatchOptions>): APMPlugin {
             });
 
             on(this, 'loadend', (e) => {
+              if (checkWhitelist(url, _opts.whiteList)) return;
               const eTime = getTimestamp();
               const { target } = e;
               const { online, effectiveType } = getNetworkStatus();
@@ -143,6 +166,8 @@ export function tryCatchPlugin(opts?: Partial<ITryCatchOptions>): APMPlugin {
             const sTime = getTimestamp();
             return original(url, config)
               .then(async (res) => {
+                if (checkWhitelist(url, _opts.whiteList)) return res;
+
                 const tmpRes = res.clone();
 
                 const eTime = getTimestamp();
