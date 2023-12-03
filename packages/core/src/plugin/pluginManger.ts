@@ -12,7 +12,7 @@ interface ApmBailHook {
 }
 
 interface ApmSerialHook {
-  configure?: <T>(config: T) => T | void;
+  configure?: (config: any) => any;
 }
 
 type APMPluginHooks = ApmParallelHook & ApmBailHook & ApmSerialHook;

@@ -14,10 +14,14 @@ export interface ApmBrowserMonitor {
 export interface ApmBrowserConfigure {
   monitor: ApmBrowserMonitor;
   apmConfig: APMConfig;
-  plugins?: APMPlugin[];
+  plugins?: ApmBrowserPlugin[];
   ready?: (client: ApmClient) => void;
   /** SenderConfigure */
   senderConfigure: ApmBrowserSenderConfigure;
+}
+
+export interface ApmBrowserPlugin extends APMPlugin {
+  configure: (configure: ApmBrowserConfigure) => ApmBrowserConfigure | void;
 }
 
 function verify(params: Record<string, unknown>) {
@@ -41,7 +45,7 @@ export async function createBrowserClient(userConfigure: ApmBrowserConfigure) {
 
   console.log(res, '-------------------------');
 
-  const defaultPlugins = [] as APMPlugin[];
+  const defaultPlugins = [] as ApmBrowserPlugin[];
 
   const plugins = [...defaultPlugins, ...(userConfigure.plugins || [])];
 
@@ -50,7 +54,7 @@ export async function createBrowserClient(userConfigure: ApmBrowserConfigure) {
   let configure = mergeConfigure(userConfigure);
 
   for (const plugin of configurePlugins) {
-    const result = plugin.configure<ApmBrowserConfigure>?.(configure);
+    const result = plugin.configure?.(configure);
     if (result) {
       configure = result;
     }
