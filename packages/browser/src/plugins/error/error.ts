@@ -6,6 +6,7 @@ import { getEventTrigger, unknownErrorEvtToString } from '../../shared/utils';
 import { parseStackFrames } from '../../shared/resolveStack';
 import { getTimestamp } from '@apm/shared';
 import { resolveErrorType } from '../../shared/resolveErrorType';
+import type { ApmBrowserPlugin } from '../../client/browser';
 
 const resourceMap: Record<string, string> = {
   img: '图片',
@@ -29,7 +30,7 @@ function parseFileType(tag: string, url: string | null): ApmResourceSubType {
   return 'OTHERS';
 }
 
-export function ApmErrorPlugin(): APMPlugin {
+export function ApmErrorPlugin(): ApmBrowserPlugin {
   return {
     name: 'apm-error-plugin',
     setup(client) {

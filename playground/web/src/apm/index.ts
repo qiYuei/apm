@@ -10,6 +10,39 @@ import {
 } from '@apm/browser'
 
 const client = createBrowserClient({
+  plugins: [
+    (() => {
+      return {
+        name: '@apm/plugin-test',
+        configure(config) {},
+        setup(config) {
+          console.log('init', config)
+        }
+      }
+    })(),
+    ApmErrorPlugin(),
+    fp(),
+    fcp(),
+    lcp(),
+    timeLine(),
+    requestPlugin({
+      async beforeTracker(response, send) {
+        const clone = response.clone()
+        const ret = (await clone.json()) as {
+          code: number
+          data: unknown
+          message: string
+          details?: string
+        }
+        console.log('就走了一次？？？？？？？？？？')
+        console.log(ret, 'ret')
+        return {
+          state: ret.code === 1 ? 'success' : 'failed',
+          error: ret.details
+        }
+      }
+    })
+  ],
   monitor: {
     error: true
   },
@@ -27,42 +60,6 @@ const client = createBrowserClient({
     }
   },
   apmConfig: {
-    interval: 5000,
-    plugins: [
-      (() => {
-        return {
-          name: '@apm/plugin-test',
-          configure(config) {},
-          setup(config) {
-            console.log('init', config)
-          }
-        }
-      })(),
-      (() => {
-        let client: ApmClient
-
-        return {
-          name: '@apm/plugin-test22222',
-          setup(clientInstance) {
-            console.log('ioooooooooooooooooooooooooooooooo')
-            client = clientInstance
-            // 捕获资源加载失败错误 js css img...
-            // window.addEventListener('error', sourceError, true)
-
-            // window.onerror = function onerror(e) {
-            //   console.log('exec js error', e)
-            // }
-
-            // window.addEventListener('unhandledrejection', unCatchPromiseError, true)
-          }
-        }
-      })(),
-      ApmErrorPlugin(),
-      fp(),
-      fcp(),
-      lcp(),
-      timeLine(),
-      requestPlugin()
-    ]
+    interval: 5000
   }
 })

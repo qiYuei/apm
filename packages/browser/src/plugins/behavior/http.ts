@@ -1,4 +1,4 @@
-import { rewrite } from '@apm/core';
+import { type MaybePromise, rewrite } from '@apm/core';
 import { type HttpMethod, getTimestamp, type voidFun } from '@apm/shared';
 import { WINDOW } from '../../shared';
 import { getNetworkStatus } from '../../shared/browser';
@@ -22,7 +22,6 @@ function checkWhitelist(url: string, whitelist: string[] | undefined): boolean {
       return url === item;
     }
     if (item.startsWith('/')) {
-      // 如果是路径，则使用正则表达式进行精确匹配
       const regex = new RegExp(`^${item}(\\?|$)`);
       return regex.test(pathname + searchParams);
     }
@@ -34,9 +33,9 @@ interface ITryCatchOptions {
   xhr: boolean;
   fetch: boolean;
   beforeTracker?: (
-    res: Response,
+    response: Response,
     send: { url: string; config: Partial<Request> },
-  ) => IBeforeTrackerReturn | boolean;
+  ) => MaybePromise<IBeforeTrackerReturn | boolean | void>;
   whiteList?: string[];
 }
 
@@ -56,7 +55,7 @@ function getAjaxBody(body: unknown) {
   return '';
 }
 
-function beforeSendHook(
+async function beforeSendHook(
   _opts: ITryCatchOptions,
   response: Response,
   url: string,
@@ -68,14 +67,12 @@ function beforeSendHook(
   } as IBeforeTrackerReturn;
 
   if (typeof _opts?.beforeTracker === 'function') {
-    const result = _opts?.beforeTracker(response, { url, config });
-    if (!result) return false;
+    const result = await _opts?.beforeTracker(response, { url, config });
+    if (result === false) return false;
     if (typeof result === 'object') {
       send = result;
       return send;
     }
-
-    return false;
   }
   return send;
 }
@@ -114,23 +111,27 @@ export function requestPlugin(opts?: Partial<ITryCatchOptions>): ApmBrowserPlugi
               };
             });
 
-            on(this, 'loadend', (e) => {
+            on(this, 'loadend', async (e) => {
               if (checkWhitelist(url, _opts.whiteList)) return;
               const eTime = getTimestamp();
               const { target } = e;
               const { online, effectiveType } = getNetworkStatus();
+
+              // if online false it mean user is off-line
+              if (!online) return;
+
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
               // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
               const response = new Response(target.responseText, { status: target.status });
 
-              const send = beforeSendHook(_opts, response, url, new Request(url, config));
+              const send = await beforeSendHook(_opts, response, url, new Request(url, config));
 
-              if (!(online && send !== false)) return;
+              if (send === false) return;
 
               const timings = resolveTiming(
                 'resource',
-                (entry) => entry.initiatorType === 'xmlhttprequest',
+                (entry) => entry.initiatorType === 'xmlhttprequest' && entry.name === url,
               );
 
               client.tracker(
@@ -146,7 +147,8 @@ export function requestPlugin(opts?: Partial<ITryCatchOptions>): ApmBrowserPlugi
                   startTime: getTimestamp(),
                   httpStatus: response.status,
                   message: httpTransform(response),
-                  timing: JSON.stringify(timings[timings.length - 1]),
+                  timing: timings.length ? JSON.stringify(timings[timings.length - 1]) : 'unknown',
+                  error: send.state !== 'success' ? send.error : '',
                 },
                 'Http',
               );
@@ -172,14 +174,15 @@ export function requestPlugin(opts?: Partial<ITryCatchOptions>): ApmBrowserPlugi
 
                 const eTime = getTimestamp();
                 const { online, effectiveType } = getNetworkStatus();
-                const send = beforeSendHook(_opts, tmpRes, url, config);
 
                 // if online false it mean user is off-line
-                if (!(online && send !== false)) return res;
+                if (!online) return res;
+                const send = await beforeSendHook(_opts, tmpRes, url, config);
+                if (send === false) return res;
 
                 const timings = resolveTiming(
                   'resource',
-                  (entry) => entry.initiatorType === 'fetch',
+                  (entry) => entry.initiatorType === 'fetch' && entry.name === url,
                 );
 
                 client.tracker(
@@ -194,8 +197,10 @@ export function requestPlugin(opts?: Partial<ITryCatchOptions>): ApmBrowserPlugi
                     state: send.state === 'success' ? 1 : 0,
                     startTime: getTimestamp(),
                     httpStatus: tmpRes.status,
-                    message: httpTransform(tmpRes),
-                    timing: JSON.stringify(timings[timings.length - 1]),
+                    message: send.error || httpTransform(tmpRes),
+                    timing: timings.length
+                      ? JSON.stringify(timings[timings.length - 1])
+                      : 'unknown',
                   },
                   'Http',
                 );
@@ -210,32 +215,3 @@ export function requestPlugin(opts?: Partial<ITryCatchOptions>): ApmBrowserPlugi
     },
   };
 }
-
-// ['onload', 'onerror', 'onprogress', 'onreadystatechange'].forEach((prop) => {
-//   if (prop in this) {
-//     rewrite(this, prop, (originalFn: voidFun) => {
-//       return function (this: XMLHttpRequest, ...args: unknown[]) {
-//         try {
-//           if (typeof originalFn === 'function') {
-//             return originalFn.apply(this, args);
-//           }
-//         } catch (e) {
-//           const msg = unknownErrorEvtToString(e as ErrorEvent);
-
-//           client.tracker(
-//             {
-//               type: 'Error',
-//               subType: 'XHR',
-//               startTime: Date.now(),
-//               error_constructor: resolveErrorType(msg),
-//               stack: parseStackFrames(e as Error),
-//               msg,
-//               pageURL: getPageUrl(),
-//             },
-//             'Error',
-//           );
-//         }
-//       };
-//     });
-//   }
-// });

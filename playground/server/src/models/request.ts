@@ -33,6 +33,9 @@ export default (sequelize: Sequelize) => {
       state: {
         type: DataTypes.INTEGER,
       },
+      error: {
+        type: DataTypes.TEXT,
+      },
       request_status: {
         type: DataTypes.INTEGER,
       },

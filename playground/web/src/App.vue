@@ -72,6 +72,17 @@ function fetchError() {
     body: JSON.stringify({ A: 1 })
   })
 }
+
+function fetch1() {
+  fetch('http://localhost:3000/api/test', {
+    method: 'post',
+    body: JSON.stringify({ A: 1 })
+  })
+}
+
+function fetch2() {
+  fetch('http://localhost:3000/api/test', {})
+}
 </script>
 
 <template>
@@ -93,6 +104,8 @@ function fetchError() {
       <button @click="asyncError">异步错误</button>
       <button @click="xhrError">xhr错误</button>
       <button @click="fetchError">fetch错误</button>
+      <button @click="fetch1">fetch1</button>
+      <button @click="fetch2">fetch2</button>
     </div>
   </header>
 

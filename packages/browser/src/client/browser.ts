@@ -1,6 +1,6 @@
 import type { ApmClient } from '@apm/core';
 import { createClient, type APMConfig, type APMPlugin, ApmError } from '@apm/core';
-import { mergeConfigure } from '../shared/utils';
+import { mergeConfigure } from './config';
 import type { ApmBrowserSenderConfigure } from '../sender/sender';
 import { createSender } from '../sender/sender';
 import { getDeviceInfo } from '../plugins';
@@ -14,44 +14,47 @@ export interface ApmBrowserMonitor {
 export interface ApmBrowserConfigure {
   monitor: ApmBrowserMonitor;
   apmConfig: APMConfig;
-  plugins?: ApmBrowserPlugin[];
+  plugins: ApmBrowserPlugin[];
   ready?: (client: ApmClient) => void;
   /** SenderConfigure */
   senderConfigure: ApmBrowserSenderConfigure;
 }
 
 export interface ApmBrowserPlugin extends APMPlugin {
-  configure: (configure: ApmBrowserConfigure) => ApmBrowserConfigure | void;
+  configure?: (configure: ApmBrowserConfigure) => ApmBrowserConfigure | void;
 }
 
-function verify(params: Record<string, unknown>) {
+function init(params: Record<string, unknown>) {
   return fetch('/api/token', {
     method: 'post',
     body: JSON.stringify(params),
   })
-    .then((r) => r.json())
-    .then((res: Record<string, unknown>) => res.data as Record<string, string>)
+    .then((r) => {
+      if (r.ok === false) {
+        return false;
+      }
+      return r.json();
+    })
+    .then((res: Record<string, unknown>) => res.data as Record<'token', string>)
     .catch((res) => {
-      console.log(res);
-      return false;
+      throw res;
     });
 }
 
 export async function createBrowserClient(userConfigure: ApmBrowserConfigure) {
-  const res: Record<'token', string> = await verify({
+  const ret = await init({
     platform: 'browser',
     devices: getDeviceInfo(),
-  }).catch(() => {});
+  });
 
-  console.log(res, '-------------------------');
-
-  const defaultPlugins = [] as ApmBrowserPlugin[];
-
-  const plugins = [...defaultPlugins, ...(userConfigure.plugins || [])];
-
-  const configurePlugins = plugins.filter((plugins) => typeof plugins.configure === 'function');
+  if (!ret) return;
+  // console.log(res, '-------------------------');
 
   let configure = mergeConfigure(userConfigure);
+
+  const configurePlugins = configure.plugins.filter(
+    (plugins) => typeof plugins.configure === 'function',
+  );
 
   for (const plugin of configurePlugins) {
     const result = plugin.configure?.(configure);
@@ -60,9 +63,14 @@ export async function createBrowserClient(userConfigure: ApmBrowserConfigure) {
     }
   }
 
-  const client = createClient(configure.apmConfig, {
-    senderFactory: createSender(configure, res.token),
-  });
+  const client = createClient(
+    Object.assign({}, userConfigure.apmConfig, {
+      plugins: (userConfigure.plugins || [])?.concat(userConfigure.apmConfig.plugins || []),
+    }),
+    {
+      senderFactory: createSender(configure, ret.token),
+    },
+  );
 
   client.init(
     () => {
