@@ -86,11 +86,18 @@ export interface ApmPerformanceTimingTracker {
   fullTiming: unknown;
 }
 
+export interface ApmRouteTracker {
+  type: 'Route';
+  to: string;
+  from: string;
+}
+
 export interface ApmTrackerType {
   Error: ApmErrorTracker;
   Resource: ApmResourceErrorTracker;
   Performance: ApmPerformanceTracker | ApmPerformanceTimingTracker;
   Http: ApmHttpTracker;
+  Route: ApmRouteTracker;
   Custom: Record<string, unknown>;
 }
 

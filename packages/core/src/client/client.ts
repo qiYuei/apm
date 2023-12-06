@@ -61,6 +61,11 @@ export class Client implements ApmClient {
         onFailed?.(e);
       });
   }
+
+  destroy() {
+    this.plugins.callParallelHook('destroy', this);
+  }
+
   transport(data: BreadcrumbPushData, immediate = false) {
     if (data.type === 'Error') {
       const errorId = createErrorEventId(data.data as ApmErrorTracker);

@@ -1,5 +1,5 @@
 import type { ApmResourceSubType } from '@apm/core';
-import { rewrite, type APMPlugin } from '@apm/core';
+import { rewrite } from '@apm/core';
 import { WINDOW } from '../../shared';
 import { getPageUrl } from '../../shared/utils';
 import { getEventTrigger, unknownErrorEvtToString } from '../../shared/utils';
@@ -51,7 +51,7 @@ export function ApmErrorPlugin(): ApmBrowserPlugin {
       //   };
       // });
 
-      rewrite(globalObject, 'onerror', function (original): OnErrorEventHandler {
+      rewrite(globalObject, 'onerror', function (original: unknown): OnErrorEventHandler {
         return function (...opts) {
           const [ev, , row, col, error] = opts;
           // 从错误信息中提取信息堆栈等等，在上传

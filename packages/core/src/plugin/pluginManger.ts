@@ -5,6 +5,7 @@ import { createDebugger } from '../utils/debug';
 
 interface ApmParallelHook {
   setup?: (client: ApmClient) => MaybePromise<void>;
+  destroy?: (client: ApmClient) => MaybePromise<void>;
 }
 
 interface ApmBailHook {
